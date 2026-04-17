@@ -852,7 +852,7 @@
     margin-top: 12px;
   }
   @media (min-width: 820px) {
-    .feature-pair { grid-template-columns: 1fr 1fr; gap: 28px; }
+    .feature-pair { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
   }
   .feature-pair h3 {
     font-size: 13px;
@@ -993,7 +993,7 @@
 <section id="box">
   <div class="content">
     <h2><span class="num">§2</span><span data-i18n="box.title">What's in the box</span></h2>
-    <p class="lede" data-i18n="box.lede">Two tabs. That's the product.</p>
+    <p class="lede" data-i18n="box.lede">Three tabs. That's the product.</p>
 
     <div class="feature-pair">
       <div>
@@ -1022,6 +1022,22 @@
             <div class="row-sep"></div>
             <div class="row dim"><span class="key">[s]</span>stage</div>
             <div class="row dim"><span class="key">[m]</span>split view</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Graph tab</h3>
+        <p data-i18n="box.graph">Commit graph with a lane renderer. Select a commit for the full detail pane — message, author, changed files.</p>
+        <div class="mini-tui" aria-hidden="true">
+          <div class="mini-tui-head">Graph</div>
+          <div class="mini-tui-body">
+            <div class="row"><span class="marker coral">●</span>a3b1c7f feat(graph)…</div>
+            <div class="row dim"><span class="marker">●</span>034c2bb ci(security)…</div>
+            <div class="row dim"><span class="marker">●</span>9f2a40e feat(host)…</div>
+            <div class="row dim"><span class="marker">●╮</span>5e8b12d merge</div>
+            <div class="row-sep"></div>
+            <div class="row dim"><span class="key">[↵]</span>detail</div>
+            <div class="row dim"><span class="key">[j/k]</span>nav</div>
           </div>
         </div>
       </div>
@@ -1088,7 +1104,7 @@
         <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
         <tbody>
           <tr><td><code>q</code>, <code>Ctrl+C</code></td><td data-i18n="kb.g.quit">quit</td></tr>
-          <tr><td><code>1</code> / <code>2</code></td><td data-i18n="kb.g.tab">Files / Git tab</td></tr>
+          <tr><td><code>1</code> / <code>2</code> / <code>3</code></td><td data-i18n="kb.g.tab">Files / Git / Graph tab</td></tr>
           <tr><td><code>Tab</code></td><td data-i18n="kb.g.cycle">cycle tabs</td></tr>
           <tr><td><code>Shift+Tab</code></td><td data-i18n="kb.g.focus">switch focused panel</td></tr>
           <tr><td><code>h</code></td><td data-i18n="kb.g.help">help</td></tr>
@@ -1120,6 +1136,18 @@
           <tr><td><code>t</code></td><td data-i18n="kb.git.tree">tree / flat view</td></tr>
           <tr><td><code>m</code></td><td data-i18n="kb.git.mode">unified ↔ side-by-side</td></tr>
           <tr><td><code>f</code></td><td data-i18n="kb.git.context">compact ↔ full-file diff</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <details class="kb-group">
+      <summary><span data-i18n="keys.graph">Graph tab</span><span class="chevron">›</span></summary>
+      <table class="kb">
+        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
+        <tbody>
+          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code></td><td data-i18n="kb.graph.nav">navigate commits</td></tr>
+          <tr><td><code>PgUp</code> / <code>PgDn</code></td><td data-i18n="kb.graph.page">page</td></tr>
+          <tr><td><code>Enter</code></td><td data-i18n="kb.graph.open">open commit detail</td></tr>
         </tbody>
       </table>
     </details>
@@ -1160,7 +1188,7 @@ reef</pre>
     <p class="lede" data-i18n="status.lede">Shipping early, iterating in the open.</p>
     <p>
       <span class="status-badge">alpha</span>
-      <span data-i18n="status.p1">Bundled plugin: <code>git</code>. Host-native: file tree and preview.</span>
+      <span data-i18n="status.p1">Bundled plugin: <code>git</code> — status, diff, and commit graph. Host-native: file tree and preview.</span>
     </p>
     <p data-i18n="status.p2">On the roadmap as standalone plugins: <code>file-search</code>, <code>grep</code>, a richer <code>file-viewer</code>.</p>
   </div>
@@ -1227,9 +1255,10 @@ reef</pre>
       'why.p2': 'No autocomplete. No linter. No language server. Not even a text editor. Write with your AI tool of choice; come here to read and ship.',
 
       'box.title': "What's in the box",
-      'box.lede': "Two tabs. That's the product.",
+      'box.lede': "Three tabs. That's the product.",
       'box.files': 'Tree navigator with a read-only preview pane. Expand, collapse, page, rebuild.',
       'box.git': 'Status, stage/unstage (keyboard or double-click), unified or side-by-side diff, compact or full-file context.',
+      'box.graph': 'Commit graph with a lane renderer. Select a commit for the full detail pane — message, author, changed files.',
       'box.li1': '<strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor.',
       'box.li2': '<strong>Persistent prefs</strong> — diff layout and mode survive restarts.',
 
@@ -1244,11 +1273,12 @@ reef</pre>
       'keys.global': 'Global',
       'keys.files': 'Files tab',
       'keys.git': 'Git tab',
+      'keys.graph': 'Graph tab',
       'keys.key': 'Key',
       'keys.action': 'Action',
 
       'kb.g.quit': 'quit',
-      'kb.g.tab': 'Files / Git tab',
+      'kb.g.tab': 'Files / Git / Graph tab',
       'kb.g.cycle': 'cycle tabs',
       'kb.g.focus': 'switch focused panel',
       'kb.g.help': 'help',
@@ -1265,6 +1295,10 @@ reef</pre>
       'kb.git.mode': 'unified ↔ side-by-side',
       'kb.git.context': 'compact ↔ full-file diff',
 
+      'kb.graph.nav': 'navigate commits',
+      'kb.graph.page': 'page',
+      'kb.graph.open': 'open commit detail',
+
       'install.title': 'Install',
       'install.lede': 'npm picks the right native binary. Supported: macOS (arm64, x64), Linux (arm64, x64), Windows (x64).',
       'install.npm': 'Via npm (recommended):',
@@ -1273,7 +1307,7 @@ reef</pre>
 
       'status.title': 'Status',
       'status.lede': 'Shipping early, iterating in the open.',
-      'status.p1': 'Bundled plugin: <code>git</code>. Host-native: file tree and preview.',
+      'status.p1': 'Bundled plugin: <code>git</code> — status, diff, and commit graph. Host-native: file tree and preview.',
       'status.p2': 'On the roadmap as standalone plugins: <code>file-search</code>, <code>grep</code>, a richer <code>file-viewer</code>.',
 
       'footer.license': 'MIT · open source',
@@ -1296,9 +1330,10 @@ reef</pre>
       'why.p2': '没有补全，没有 linter，没有 language server，连编辑器都没有。写代码用你顺手的 AI 工具；来这里只是为了读代码和提交。',
 
       'box.title': '当前功能',
-      'box.lede': '两个标签页，就是全部。',
+      'box.lede': '三个标签页，就是全部。',
       'box.files': '文件树导航 + 只读预览面板。展开、折叠、翻页、重建。',
       'box.git': 'status、stage / unstage（键盘或双击）、unified / side-by-side diff、compact / full-file 上下文。',
+      'box.graph': '带 lane 渲染的提交图。选中一条提交，右侧显示完整详情——信息、作者、变更文件。',
       'box.li1': '<strong>键盘优先</strong>，鼠标只在合适的地方出现——拖动分隔条、双击切换暂存、在光标下的面板里滚动。',
       'box.li2': '<strong>记住偏好</strong>：diff 的布局和模式跨会话保留。',
 
@@ -1313,11 +1348,12 @@ reef</pre>
       'keys.global': '全局',
       'keys.files': 'Files 标签',
       'keys.git': 'Git 标签',
+      'keys.graph': 'Graph 标签',
       'keys.key': '按键',
       'keys.action': '功能',
 
       'kb.g.quit': '退出',
-      'kb.g.tab': '切到 Files / Git 标签',
+      'kb.g.tab': '切到 Files / Git / Graph 标签',
       'kb.g.cycle': '循环切换标签',
       'kb.g.focus': '切换聚焦的面板',
       'kb.g.help': '帮助',
@@ -1334,6 +1370,10 @@ reef</pre>
       'kb.git.mode': 'unified / side-by-side',
       'kb.git.context': 'compact / full-file',
 
+      'kb.graph.nav': '浏览提交',
+      'kb.graph.page': '翻页',
+      'kb.graph.open': '打开提交详情',
+
       'install.title': '安装',
       'install.lede': 'npm 会自动选择当前平台对应的原生二进制。支持：macOS (arm64, x64)、Linux (arm64, x64)、Windows (x64)。',
       'install.npm': '通过 npm（推荐）：',
@@ -1342,7 +1382,7 @@ reef</pre>
 
       'status.title': '当前状态',
       'status.lede': '早期发布，公开迭代。',
-      'status.p1': '已内置插件：<code>git</code>。host 原生：文件树与预览。',
+      'status.p1': '已内置插件：<code>git</code>——status、diff、提交图。host 原生：文件树与预览。',
       'status.p2': '规划中（作为独立插件）：<code>file-search</code>、<code>grep</code>、更完整的 <code>file-viewer</code>。',
 
       'footer.license': 'MIT · 开源',
