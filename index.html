@@ -290,6 +290,25 @@
     border-bottom-color: var(--accent);
   }
   .tui-tabs .tab.active .kbd { color: var(--accent); }
+  /* Inline <mark> used by the Search demo's matched-range highlight. Accent
+     bg + dark fg so it reads against both light and dark syntax rows. */
+  mark {
+    background: var(--accent);
+    color: var(--bg);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+  /* <kbd> hints inline in prose (Space P, Alt+Enter, etc.) — a little
+     chrome so they don't disappear into body text. */
+  kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-size: 0.85em;
+    color: var(--fg);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    padding: 0 4px;
+  }
   .tui-tabs .spacer { flex: 1; }
   .tui-tabs .branch {
     padding: 8px 14px;
@@ -768,7 +787,7 @@
     margin-top: 12px;
   }
   @media (min-width: 820px) {
-    .feature-pair { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .feature-pair { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
   }
   .feature-pair h3 {
     font-size: 13px;
@@ -882,7 +901,7 @@
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
       <span class="label">reef — ~/projects/app — git: main</span>
     </div>
-    <div class="tui-body" id="tuiBody" tabindex="0" role="application" aria-label="Reef interactive demo. Click to focus, then use 1/2/3, j/k, Tab, Enter.">
+    <div class="tui-body" id="tuiBody" tabindex="0" role="application" aria-label="Reef interactive demo. Click to focus, then use 1/2/3/4, j/k, Tab, Enter.">
       <div class="tui-focus-hint" id="tuiFocusHint" aria-hidden="true">click to interact</div>
       <div class="tui-tabs" id="tuiTabs"></div>
       <div class="tui-split">
@@ -908,7 +927,7 @@
 <section id="box">
   <div class="content">
     <h2><span class="num">§2</span><span data-i18n="box.title">What's in the box</span></h2>
-    <p class="lede" data-i18n="box.lede">Three tabs. That's the product.</p>
+    <p class="lede" data-i18n="box.lede">Four tabs and two palettes. That's the product.</p>
 
     <div class="feature-pair">
       <div>
@@ -922,6 +941,21 @@
             <div class="row dim indent"><span class="marker">▸</span>ui/</div>
             <div class="row"><span class="marker">▸</span>crates/</div>
             <div class="row dim indent">README.md</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Search tab</h3>
+        <p data-i18n="box.search">Workdir-wide content search (ripgrep-powered, respects <code>.gitignore</code>) with live preview. Modal input / list, whole-row horizontal scroll. <kbd>Space</kbd> <kbd>F</kbd> for an overlay.</p>
+        <div class="mini-tui" aria-hidden="true">
+          <div class="mini-tui-head">Search</div>
+          <div class="mini-tui-body">
+            <div class="row"><span class="marker coral">&gt;</span>foo</div>
+            <div class="row-sep"></div>
+            <div class="row"><span class="key">src/app.rs:42</span></div>
+            <div class="row dim"><span class="key">src/app.rs:128</span></div>
+            <div class="row dim"><span class="key">src/lib.rs:12</span></div>
+            <div class="row dim"><span class="key">README.md:8</span></div>
           </div>
         </div>
       </div>
@@ -959,6 +993,7 @@
     </div>
 
     <ul style="margin-top: 14px;">
+      <li data-i18n="box.li0"><strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab).</li>
       <li data-i18n="box.li1"><strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor.</li>
       <li data-i18n="box.li2"><strong>Persistent prefs</strong> — diff layout and mode survive restarts.</li>
     </ul>
@@ -977,10 +1012,12 @@
         <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
         <tbody>
           <tr><td><code>q</code>, <code>Ctrl+C</code></td><td data-i18n="kb.g.quit">quit</td></tr>
-          <tr><td><code>1</code> / <code>2</code> / <code>3</code></td><td data-i18n="kb.g.tab">Files / Git / Graph tab</td></tr>
+          <tr><td><code>1</code> / <code>2</code> / <code>3</code> / <code>4</code></td><td data-i18n="kb.g.tab">Files / Search / Git / Graph tab</td></tr>
           <tr><td><code>Tab</code></td><td data-i18n="kb.g.cycle">cycle tabs</td></tr>
           <tr><td><code>Shift+Tab</code></td><td data-i18n="kb.g.focus">switch focused panel</td></tr>
           <tr><td><code>h</code></td><td data-i18n="kb.g.help">help</td></tr>
+          <tr><td><code>Space p</code></td><td data-i18n="kb.g.qopen">quick-open file (fuzzy path)</td></tr>
+          <tr><td><code>Space f</code></td><td data-i18n="kb.g.gsearch">global content search overlay</td></tr>
           <tr><td><code>v</code></td><td data-i18n="kb.g.mouse">toggle mouse capture (for terminal text selection)</td></tr>
         </tbody>
       </table>
@@ -995,6 +1032,22 @@
           <tr><td><code>PgUp</code> / <code>PgDn</code></td><td data-i18n="kb.f.page">page</td></tr>
           <tr><td><code>Enter</code></td><td data-i18n="kb.f.expand">expand/collapse directory</td></tr>
           <tr><td><code>r</code></td><td data-i18n="kb.f.rebuild">rebuild tree</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <details class="kb-group">
+      <summary><span data-i18n="keys.search">Search tab</span><span class="chevron">›</span></summary>
+      <table class="kb">
+        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
+        <tbody>
+          <tr><td><code>/</code> / <code>i</code></td><td data-i18n="kb.s.focus">focus the search input</td></tr>
+          <tr><td><code>Esc</code></td><td data-i18n="kb.s.blur">return to list mode</td></tr>
+          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code></td><td data-i18n="kb.s.nav">navigate results</td></tr>
+          <tr><td><code>Enter</code>, double-click</td><td data-i18n="kb.s.open">reveal match in Files tab</td></tr>
+          <tr><td><code>r</code></td><td data-i18n="kb.s.reload">reload current query</td></tr>
+          <tr><td><code>←</code>/<code>→</code>, <code>Shift+←</code>/<code>Shift+→</code></td><td data-i18n="kb.s.hscroll">horizontal scroll (whole row)</td></tr>
+          <tr><td><code>Home</code> / <code>End</code></td><td data-i18n="kb.s.ends">reset / jump h-scroll</td></tr>
         </tbody>
       </table>
     </details>
@@ -1126,10 +1179,12 @@ reef</pre>
       'why.p2': 'No autocomplete. No linter. No language server. Not even a text editor. Write with your AI tool of choice; come here to read and ship.',
 
       'box.title': "What's in the box",
-      'box.lede': "Three tabs. That's the product.",
+      'box.lede': "Four tabs and two palettes. That's the product.",
       'box.files': 'Tree navigator with a read-only preview pane. Expand, collapse, page, rebuild.',
+      'box.search': 'Workdir-wide content search (ripgrep-powered, respects <code>.gitignore</code>) with live preview. Modal input / list, whole-row horizontal scroll. <kbd>Space</kbd> <kbd>F</kbd> for an overlay.',
       'box.git': 'Status, stage/unstage (keyboard or double-click), unified or side-by-side diff, compact or full-file context, discard with confirmation, push / force-push (<code>--force-with-lease</code>) behind a confirm banner.',
       'box.graph': 'Commit DAG with ref chips and a lane renderer. Select a commit for inline detail and per-file diff — message, author, changed files.',
+      'box.li0': '<strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab).',
       'box.li1': '<strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor.',
       'box.li2': '<strong>Persistent prefs</strong> — diff layout and mode survive restarts.',
 
@@ -1137,22 +1192,33 @@ reef</pre>
       'keys.lede': 'Everything you need, mapped to one hand.',
       'keys.global': 'Global',
       'keys.files': 'Files tab',
+      'keys.search': 'Search tab',
       'keys.git': 'Git tab',
       'keys.graph': 'Graph tab',
       'keys.key': 'Key',
       'keys.action': 'Action',
 
       'kb.g.quit': 'quit',
-      'kb.g.tab': 'Files / Git / Graph tab',
+      'kb.g.tab': 'Files / Search / Git / Graph tab',
       'kb.g.cycle': 'cycle tabs',
       'kb.g.focus': 'switch focused panel',
       'kb.g.help': 'help',
+      'kb.g.qopen': 'quick-open file (fuzzy path)',
+      'kb.g.gsearch': 'global content search overlay',
       'kb.g.mouse': 'toggle mouse capture (for terminal text selection)',
 
       'kb.f.nav': 'navigate',
       'kb.f.page': 'page',
       'kb.f.expand': 'expand/collapse directory',
       'kb.f.rebuild': 'rebuild tree',
+
+      'kb.s.focus': 'focus the search input',
+      'kb.s.blur': 'return to list mode',
+      'kb.s.nav': 'navigate results',
+      'kb.s.open': 'reveal match in Files tab',
+      'kb.s.reload': 'reload current query',
+      'kb.s.hscroll': 'horizontal scroll (whole row)',
+      'kb.s.ends': 'reset / jump h-scroll',
 
       'kb.git.stage': 'stage / unstage',
       'kb.git.discard': 'discard unstaged file (confirm)',
@@ -1174,8 +1240,8 @@ reef</pre>
 
       'status.title': 'Status',
       'status.lede': 'Shipping early, iterating in the open.',
-      'status.p1': 'Single-process Rust binary — no plugins, no IPC. Files, Git, and Graph are all host-native.',
-      'status.p2': 'On the roadmap: fuzzy file search, content grep, and a richer file viewer — all built in, not bolted on.',
+      'status.p1': 'Single-process Rust binary — no plugins, no IPC. Files, Search, Git, and Graph are all host-native.',
+      'status.p2': 'On the roadmap: a richer file viewer and more palettes — all built in, not bolted on.',
 
       'footer.license': 'MIT · open source'
     },
@@ -1195,10 +1261,12 @@ reef</pre>
       'why.p2': '没有补全，没有 linter，没有 language server，连编辑器都没有。写代码用你顺手的 AI 工具；来这里只是为了读代码和提交。',
 
       'box.title': '当前功能',
-      'box.lede': '三个标签页，就是全部。',
+      'box.lede': '四个标签加两个浮层，就是全部。',
       'box.files': '文件树导航 + 只读预览面板。展开、折叠、翻页、重建。',
+      'box.search': '工作目录内容搜索（基于 ripgrep，遵循 <code>.gitignore</code>），右栏活预览；列表 / 输入两态切换，整行水平滚动。<kbd>Space</kbd> <kbd>F</kbd> 开浮层版。',
       'box.git': 'status、stage / unstage（键盘或双击）、unified / side-by-side diff、compact / full-file 上下文、带确认的还原（discard）、带确认横条的推送 / 强制推送（<code>--force-with-lease</code>）。',
       'box.graph': 'commit 图（DAG）+ 引用标签 + lane 渲染。选中一条提交，右侧显示内联详情与单文件 diff——信息、作者、变更文件。',
+      'box.li0': '<strong>浮层</strong>：<kbd>Space</kbd> <kbd>P</kbd> 按模糊路径快速打开文件；<kbd>Space</kbd> <kbd>F</kbd> 开全局内容搜索（跟 Search 标签共用后端，<kbd>Alt</kbd>+<kbd>Enter</kbd> 可把当前查询 pin 到标签里）。',
       'box.li1': '<strong>键盘优先</strong>，鼠标只在合适的地方出现——拖动分隔条、双击切换暂存、在光标下的面板里滚动。',
       'box.li2': '<strong>记住偏好</strong>：diff 的布局和模式跨会话保留。',
 
@@ -1206,22 +1274,33 @@ reef</pre>
       'keys.lede': '所有你要的，单手覆盖。',
       'keys.global': '全局',
       'keys.files': 'Files 标签',
+      'keys.search': 'Search 标签',
       'keys.git': 'Git 标签',
       'keys.graph': 'Graph 标签',
       'keys.key': '按键',
       'keys.action': '功能',
 
       'kb.g.quit': '退出',
-      'kb.g.tab': '切到 Files / Git / Graph 标签',
+      'kb.g.tab': '切到 Files / Search / Git / Graph 标签',
       'kb.g.cycle': '循环切换标签',
       'kb.g.focus': '切换聚焦的面板',
       'kb.g.help': '帮助',
+      'kb.g.qopen': '按模糊路径快速打开文件',
+      'kb.g.gsearch': '全局内容搜索浮层',
       'kb.g.mouse': '关/开鼠标捕获（让终端原生选择文本）',
 
       'kb.f.nav': '导航',
       'kb.f.page': '翻页',
       'kb.f.expand': '展开 / 折叠目录',
       'kb.f.rebuild': '重建文件树',
+
+      'kb.s.focus': '聚焦搜索输入',
+      'kb.s.blur': '退回列表模式',
+      'kb.s.nav': '结果导航',
+      'kb.s.open': '切到 Files 标签并定位到文件',
+      'kb.s.reload': '重跑当前查询',
+      'kb.s.hscroll': '整行水平滚动',
+      'kb.s.ends': '重置 / 跳到末尾',
 
       'kb.git.stage': '暂存 / 取消暂存',
       'kb.git.discard': '还原未暂存的文件（需确认）',
@@ -1243,8 +1322,8 @@ reef</pre>
 
       'status.title': '当前状态',
       'status.lede': '早期发布，公开迭代。',
-      'status.p1': '单进程 Rust 二进制——没有插件，没有 IPC。Files、Git、Graph 全部 host 原生。',
-      'status.p2': '规划中：模糊文件搜索、内容 grep、更完整的文件预览——都内建在 host 里，而不是外挂进来。',
+      'status.p1': '单进程 Rust 二进制——没有插件，没有 IPC。Files、Search、Git、Graph 全部 host 原生。',
+      'status.p2': '规划中：更完整的文件预览、更多浮层——都内建在 host 里，而不是外挂进来。',
 
       'footer.license': 'MIT · 开源'
     }
@@ -1444,21 +1523,34 @@ reef</pre>
       ]},
     ];
 
+    // Static search scene — hand-rolled so the demo can show the Search tab
+    // without wiring up a real query engine. The "query" is baked in.
+    const searchHits = [
+      { path: 'src/app.rs',  line: 42,  text: 'fn main() { let x = foo(); }',      mRange: [24, 27] },
+      { path: 'src/app.rs',  line: 128, text: '    self.foo_count += 1;',            mRange: [9, 12] },
+      { path: 'src/app.rs',  line: 312, text: '    let _ = foo();',                  mRange: [12, 15] },
+      { path: 'src/lib.rs',  line: 12,  text: 'use foo::*;',                         mRange: [4, 7]  },
+      { path: 'README.md',   line: 8,   text: '- foo is here',                       mRange: [2, 5]  },
+    ];
+
     const state = {
       tab: 'git', panel: 'left', focused: false,
-      files: { sel: 0 },
-      git:   { sel: 0, mode: 'unified' },
-      graph: { sel: 0 },
+      files:  { sel: 0 },
+      search: { sel: 0 },
+      git:    { sel: 0, mode: 'unified' },
+      graph:  { sel: 0 },
     };
 
     const LABELS = {
       en: {
         focusHint: 'click to interact',
-        tabFiles: 'Files', tabGit: 'Git', tabGraph: 'Graph',
+        tabFiles: 'Files', tabSearch: 'Search', tabGit: 'Git', tabGraph: 'Graph',
         nav: 'nav', expand: 'expand/collapse', panel: 'switch panel', open: 'open',
         stage: 'stage', unstage: 'unstage', mode: 'unified↔split',
+        focus: 'focus input',
         tabs: 'switch tab',
         staged: 'staged', unstaged: 'unstaged', modified: 'modified', commits: 'commits',
+        hits: 'hits',
         brand: 'reef · alpha',
         directory: 'directory', preview: 'preview',
         entries: (n) => n + (n === 1 ? ' entry' : ' entries'),
@@ -1469,11 +1561,13 @@ reef</pre>
       },
       zh: {
         focusHint: '点击交互',
-        tabFiles: '文件', tabGit: 'Git', tabGraph: '图谱',
+        tabFiles: '文件', tabSearch: '搜索', tabGit: 'Git', tabGraph: '图谱',
         nav: '导航', expand: '展开 / 折叠', panel: '切换面板', open: '打开',
         stage: '暂存', unstage: '取消暂存', mode: 'unified↔split',
+        focus: '聚焦输入',
         tabs: '切换标签',
         staged: '已暂存', unstaged: '未暂存', modified: '已修改', commits: '提交',
+        hits: '条命中',
         brand: 'reef · alpha',
         directory: '目录', preview: '预览',
         entries: (n) => n + ' 项',
@@ -1515,9 +1609,10 @@ reef</pre>
       tabsEl.innerHTML = '';
       const lab = L();
       const defs = [
-        { id: 'files', label: lab.tabFiles, key: '1' },
-        { id: 'git',   label: lab.tabGit,   key: '2' },
-        { id: 'graph', label: lab.tabGraph, key: '3' },
+        { id: 'files',  label: lab.tabFiles,  key: '1' },
+        { id: 'search', label: lab.tabSearch, key: '2' },
+        { id: 'git',    label: lab.tabGit,    key: '3' },
+        { id: 'graph',  label: lab.tabGraph,  key: '4' },
       ];
       defs.forEach(t => {
         const btn = document.createElement('button');
@@ -1744,10 +1839,11 @@ reef</pre>
       hintsEl.innerHTML = '';
       const lab = L();
       const items = [];
-      if (state.tab === 'files')      items.push(['j/k', lab.nav], ['Enter', lab.expand], ['Tab', lab.panel]);
-      else if (state.tab === 'git')   items.push(['s', lab.stage], ['u', lab.unstage], ['m', lab.mode], ['j/k', lab.nav]);
-      else                            items.push(['j/k', lab.nav], ['Enter', lab.open], ['Tab', lab.panel]);
-      items.push(['1/2/3', lab.tabs]);
+      if (state.tab === 'files')       items.push(['j/k', lab.nav], ['Enter', lab.expand], ['Tab', lab.panel]);
+      else if (state.tab === 'search') items.push(['j/k', lab.nav], ['/', lab.focus], ['Enter', lab.open]);
+      else if (state.tab === 'git')    items.push(['s', lab.stage], ['u', lab.unstage], ['m', lab.mode], ['j/k', lab.nav]);
+      else                             items.push(['j/k', lab.nav], ['Enter', lab.open], ['Tab', lab.panel]);
+      items.push(['1/2/3/4', lab.tabs]);
       items.forEach(([k, label]) => {
         const s = document.createElement('span');
         s.innerHTML = '<span class="key">[' + k + ']</span> ' + label;
@@ -1761,6 +1857,8 @@ reef</pre>
         status.textContent = st + ' ' + lab.staged + ' · ' + md + ' ' + lab.modified;
       } else if (state.tab === 'graph') {
         status.textContent = commits.length + ' ' + lab.commits + ' · main';
+      } else if (state.tab === 'search') {
+        status.textContent = searchHits.length + ' ' + lab.hits + ' · foo';
       } else {
         status.textContent = lab.brand;
       }
@@ -1770,9 +1868,85 @@ reef</pre>
     function renderPanels() {
       leftEl.classList.toggle('focused-panel', state.panel === 'left');
       rightEl.classList.toggle('focused-panel', state.panel === 'right');
-      if (state.tab === 'files') { renderFilesLeft(); renderFilesRight(); }
-      if (state.tab === 'git')   { renderGitLeft();   renderGitRight();   }
-      if (state.tab === 'graph') { renderGraphLeft(); renderGraphRight(); }
+      if (state.tab === 'files')  { renderFilesLeft();  renderFilesRight();  }
+      if (state.tab === 'search') { renderSearchLeft(); renderSearchRight(); }
+      if (state.tab === 'git')    { renderGitLeft();    renderGitRight();    }
+      if (state.tab === 'graph')  { renderGraphLeft();  renderGraphRight();  }
+    }
+
+    // Static Search scene. Left = prompt + results; right = preview of the
+    // selected hit's file with the matched line highlighted. No live query
+    // — the marketing page mocks what the real tab looks like, not how it
+    // computes.
+    function renderSearchLeft() {
+      leftEl.innerHTML = '';
+      // Prompt row
+      const prompt = document.createElement('div');
+      prompt.className = 'tui-row';
+      prompt.innerHTML = '<span style="color: var(--accent); font-weight: 600;">&gt; </span>foo';
+      leftEl.appendChild(prompt);
+      // Separator
+      const sep = document.createElement('div');
+      sep.className = 'row-sep';
+      leftEl.appendChild(sep);
+      // Results
+      searchHits.forEach((hit, i) => {
+        const sel = (i === state.search.sel);
+        const row = document.createElement('div');
+        row.className = 'tui-row' + (sel ? ' selected' : '');
+        const pathSpan = esc(hit.path + ':' + hit.line);
+        const pre  = esc(hit.text.slice(0, hit.mRange[0]));
+        const mid  = esc(hit.text.slice(hit.mRange[0], hit.mRange[1]));
+        const post = esc(hit.text.slice(hit.mRange[1]));
+        row.innerHTML =
+          '<span class="key" style="min-width: 140px; display: inline-block;">' + pathSpan + '</span>' +
+          '<span style="color: var(--fg-dim);"> │ </span>' +
+          pre + '<mark>' + mid + '</mark>' + post;
+        row.addEventListener('click', () => {
+          state.search.sel = i;
+          tui.focus(); renderAll();
+        });
+        leftEl.appendChild(row);
+      });
+    }
+
+    function renderSearchRight() {
+      rightEl.innerHTML = '';
+      const hit = searchHits[state.search.sel];
+      if (!hit) { rightEl.innerHTML = '<div class="tui-empty">—</div>'; return; }
+      const lab = L();
+      const head = document.createElement('div');
+      head.className = 'tui-view-head';
+      head.textContent = hit.path;
+      rightEl.appendChild(head);
+      // Fake preview — 12 lines of plausible content, with the matched line
+      // swapped in at hit.line (bounded to the visible range).
+      const targetRow = Math.min(hit.line, 10);
+      const template = [
+        '//! Entry point.',
+        '',
+        'use crate::state::App;',
+        'use crate::ui;',
+        '',
+        'pub fn run() -> anyhow::Result<()> {',
+        '    let mut app = App::new()?;',
+        '    while !app.should_quit {',
+        '        ui::render(&mut app)?;',
+        '        app.tick();',
+        '    }',
+        '    Ok(())',
+        '}',
+      ];
+      template[targetRow - 1] = hit.text;
+      template.forEach((line, i) => {
+        const lineno = i + 1;
+        const row = document.createElement('div');
+        row.className = 'tui-row' + (lineno === targetRow ? ' selected' : '');
+        row.innerHTML =
+          '<span style="color: var(--fg-dim); display: inline-block; width: 32px; text-align: right; padding-right: 8px;">' +
+          lineno + '</span>' + esc(line);
+        rightEl.appendChild(row);
+      });
     }
 
     function renderAll() {
@@ -1792,6 +1966,9 @@ reef</pre>
       if (state.tab === 'files') {
         const n = filesVisible.length;
         state.files.sel = (state.files.sel + dir + n) % n;
+      } else if (state.tab === 'search') {
+        const n = searchHits.length;
+        state.search.sel = (state.search.sel + dir + n) % n;
       } else if (state.tab === 'git') {
         const n = gitItems.length;
         state.git.sel = (state.git.sel + dir + n) % n;
@@ -1805,8 +1982,8 @@ reef</pre>
       if (!state.focused) return;
       const k = e.key;
 
-      if (k === '1' || k === '2' || k === '3') {
-        state.tab = k === '1' ? 'files' : k === '2' ? 'git' : 'graph';
+      if (k === '1' || k === '2' || k === '3' || k === '4') {
+        state.tab = k === '1' ? 'files' : k === '2' ? 'search' : k === '3' ? 'git' : 'graph';
         state.panel = 'left';
         e.preventDefault(); renderAll(); return;
       }
