@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Reef — the minimal dev terminal for the AI coding era</title>
-<meta name="description" content="Once AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%. A keyboard-first terminal workbench: file tree, read-only preview, git diff." />
+<meta name="description" content="Once AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%. Keyboard-first file tree, ripgrep search, git diff, commit graph — local or over SSH." />
 <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='50%25' y='55%25' font-family='JetBrains Mono,monospace' font-size='18' font-weight='700' text-anchor='middle' dominant-baseline='middle' fill='%23FF7F50'>R</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -868,6 +868,7 @@
   <div class="nav-links">
     <a href="#why" data-i18n="nav.why">Why</a>
     <a href="#box" data-i18n="nav.box">Features</a>
+    <a href="#ssh" data-i18n="nav.ssh">SSH</a>
     <a href="#keys" data-i18n="nav.keys">Keys</a>
     <a href="#install" data-i18n="nav.install">Install</a>
     <a href="https://github.com/Blushyes/reef" target="_blank" rel="noopener">GitHub</a>
@@ -932,7 +933,7 @@
     <div class="feature-pair">
       <div>
         <h3>Files tab</h3>
-        <p data-i18n="box.files">Tree navigator with a read-only preview pane. Expand, collapse, page, rebuild.</p>
+        <p data-i18n="box.files">Tree navigator with a read-only preview — syntax-highlighted code, inline image rendering (Kitty / iTerm2 / halfblocks), and friendly metadata cards for binaries. Create, rename, and trash entries right from the tree.</p>
         <div class="mini-tui" aria-hidden="true">
           <div class="mini-tui-head">Files</div>
           <div class="mini-tui-body">
@@ -961,22 +962,22 @@
       </div>
       <div>
         <h3>Git tab</h3>
-        <p data-i18n="box.git">Status, stage/unstage (keyboard or double-click), unified or side-by-side diff, compact or full-file context, discard with confirmation, push / force-push (<code>--force-with-lease</code>) behind a confirm banner.</p>
+        <p data-i18n="box.git">Status with per-file <code>+N −M</code> numstat. Stage / unstage per file or per folder (keyboard or double-click). Unified or side-by-side diff, compact or full-file, syntax-highlighted. Discard (confirmed) or discard-all. Push / force-push (<code>--force-with-lease</code>) behind a confirm banner.</p>
         <div class="mini-tui" aria-hidden="true">
           <div class="mini-tui-head">Git</div>
           <div class="mini-tui-body">
-            <div class="row"><span class="sign add">M</span>src/ui.rs</div>
-            <div class="row"><span class="sign add">A</span>src/panel.rs</div>
-            <div class="row"><span class="sign del">D</span>old/scratch.md</div>
+            <div class="row"><span class="sign add">M</span>src/ui.rs<span class="key" style="margin-left:auto;">+12 −3</span></div>
+            <div class="row"><span class="sign add">A</span>src/panel.rs<span class="key" style="margin-left:auto;">+48 −0</span></div>
+            <div class="row"><span class="sign del">D</span>old/scratch.md<span class="key" style="margin-left:auto;">+0 −3</span></div>
             <div class="row-sep"></div>
-            <div class="row dim"><span class="key">[s]</span>stage</div>
+            <div class="row dim"><span class="key">[s/u]</span>stage / unstage</div>
             <div class="row dim"><span class="key">[m]</span>split view</div>
           </div>
         </div>
       </div>
       <div>
         <h3>Graph tab</h3>
-        <p data-i18n="box.graph">Commit DAG with ref chips and a lane renderer. Select a commit for inline detail and per-file diff — message, author, changed files.</p>
+        <p data-i18n="box.graph">Commit DAG with ref chips and a lane renderer. Select one for inline detail and per-file diff; press <kbd>V</kbd> for vim-style visual mode — pick a range of commits and read the merged diff across them.</p>
         <div class="mini-tui" aria-hidden="true">
           <div class="mini-tui-head">Graph</div>
           <div class="mini-tui-body">
@@ -993,17 +994,42 @@
     </div>
 
     <ul style="margin-top: 14px;">
-      <li data-i18n="box.li0"><strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab).</li>
-      <li data-i18n="box.li1"><strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor.</li>
-      <li data-i18n="box.li2"><strong>Persistent prefs</strong> — diff layout and mode survive restarts.</li>
+      <li data-i18n="box.li0"><strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab), <kbd>Ctrl</kbd>+<kbd>O</kbd> opens the SSH hosts picker.</li>
+      <li data-i18n="box.li1"><strong>Drag-drop file copy</strong> — drop files onto the terminal to enter place mode, then click any directory to copy them there. Works over SSH via the existing ControlMaster.</li>
+      <li data-i18n="box.li2"><strong>Text selection → system clipboard</strong> — drag inside a preview and Reef copies via OSC 52 (no helper binary, works over SSH). Press <kbd>v</kbd> to drop mouse capture for the terminal's native selection instead.</li>
+      <li data-i18n="box.li3"><strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor, right-click the tree for a context menu.</li>
+      <li data-i18n="box.li4"><strong>Auto-everything</strong> — light / dark theme via OSC 11, English / 简体中文 via system locale, diff layout + recent hosts persisted across restarts.</li>
     </ul>
   </div>
 </section>
 
-<!-- ───────────────────────── §3 keybindings ──────────────── -->
+<!-- ───────────────────────── §3 remote over ssh ──────────── -->
+<section id="ssh">
+  <div class="content">
+    <h2><span class="num">§3</span><span data-i18n="ssh.title">Remote over SSH</span></h2>
+    <p class="lede" data-i18n="ssh.lede">VSCode Remote SSH, minus the IDE.</p>
+
+    <p data-i18n="ssh.p1">Point Reef at a remote box and get the full Files / Search / Git / Graph UI driven over SSH stdio — same keys, same feature set as local. A tiny <code>reef-agent</code> daemon runs on the remote; Reef installs a version-matched build automatically.</p>
+
+<pre class="codeblock"><span class="comment"># Open remote $HOME on host (reef-agent auto-installed)</span>
+<span class="cmd-accent">reef</span> --ssh user@host
+
+<span class="comment"># Open /path on host</span>
+<span class="cmd-accent">reef</span> --ssh user@host:/path</pre>
+
+    <ul style="margin-top: 14px;">
+      <li data-i18n="ssh.li0"><strong>Auto-deploy</strong> — detects remote OS/arch, downloads the matching agent from GitHub Releases, or uploads from your local build as a fallback. Protocol-version mismatch triggers a forced reinstall.</li>
+      <li data-i18n="ssh.li1"><strong>One SSH session</strong> — a ControlMaster socket carries JSON-RPC data, <code>scp</code> uploads, and <code>ssh -t</code> <code>$EDITOR</code> passthrough. One connection, one password prompt.</li>
+      <li data-i18n="ssh.li2"><strong>Hot swap</strong> — press <kbd>Ctrl</kbd>+<kbd>O</kbd> inside Reef to pick a host from <code>~/.ssh/config</code> or recent connections. The backend swaps live, no restart.</li>
+      <li data-i18n="ssh.li3"><strong>Feature parity</strong> — content search, diffs, staging, commit graph, file-tree create / rename / delete, drag-drop upload — all work the same remote.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ───────────────────────── §4 keybindings ──────────────── -->
 <section id="keys">
   <div class="content">
-    <h2><span class="num">§3</span><span data-i18n="keys.title">Keybindings</span></h2>
+    <h2><span class="num">§4</span><span data-i18n="keys.title">Keybindings</span></h2>
     <p class="lede" data-i18n="keys.lede">Everything you need, mapped to one hand.</p>
 
     <details class="kb-group" open>
@@ -1016,9 +1042,15 @@
           <tr><td><code>Tab</code></td><td data-i18n="kb.g.cycle">cycle tabs</td></tr>
           <tr><td><code>Shift+Tab</code></td><td data-i18n="kb.g.focus">switch focused panel</td></tr>
           <tr><td><code>h</code></td><td data-i18n="kb.g.help">help</td></tr>
+          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code>, <code>Ctrl+P</code>/<code>Ctrl+N</code></td><td data-i18n="kb.g.nav">navigate</td></tr>
+          <tr><td><code>PgUp</code> / <code>PgDn</code></td><td data-i18n="kb.g.page">page</td></tr>
+          <tr><td><code>←</code>/<code>→</code>, <code>Shift+←</code>/<code>Shift+→</code></td><td data-i18n="kb.g.hscroll">horizontal scroll</td></tr>
+          <tr><td><code>/</code> · <code>?</code> · <code>n</code>/<code>N</code></td><td data-i18n="kb.g.find">vim-style find in preview / diff</td></tr>
           <tr><td><code>Space p</code></td><td data-i18n="kb.g.qopen">quick-open file (fuzzy path)</td></tr>
           <tr><td><code>Space f</code></td><td data-i18n="kb.g.gsearch">global content search overlay</td></tr>
+          <tr><td><code>Ctrl+O</code></td><td data-i18n="kb.g.hosts">hosts picker (open SSH target)</td></tr>
           <tr><td><code>v</code></td><td data-i18n="kb.g.mouse">toggle mouse capture (for terminal text selection)</td></tr>
+          <tr><td data-i18n="kb.g.dragkey">drag file into terminal</td><td data-i18n="kb.g.drag">enter place mode to copy</td></tr>
         </tbody>
       </table>
     </details>
@@ -1028,10 +1060,13 @@
       <table class="kb">
         <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
         <tbody>
-          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code></td><td data-i18n="kb.f.nav">navigate</td></tr>
-          <tr><td><code>PgUp</code> / <code>PgDn</code></td><td data-i18n="kb.f.page">page</td></tr>
-          <tr><td><code>Enter</code></td><td data-i18n="kb.f.expand">expand/collapse directory</td></tr>
+          <tr><td><code>Enter</code></td><td data-i18n="kb.f.expand">expand/collapse directory, or open in $EDITOR</td></tr>
+          <tr><td><code>e</code></td><td data-i18n="kb.f.edit">open selected file in $EDITOR</td></tr>
           <tr><td><code>r</code></td><td data-i18n="kb.f.rebuild">rebuild tree</td></tr>
+          <tr><td><code>F2</code></td><td data-i18n="kb.f.rename">rename selected entry</td></tr>
+          <tr><td><code>d</code> / <code>Del</code> / <code>⌫</code></td><td data-i18n="kb.f.trash">move to trash (confirm)</td></tr>
+          <tr><td><code>Shift+D</code> / <code>Shift+Del</code></td><td data-i18n="kb.f.harddel">hard-delete (confirm)</td></tr>
+          <tr><td data-i18n="kb.f.rclickkey">right-click</td><td data-i18n="kb.f.rclick">open file-tree context menu</td></tr>
         </tbody>
       </table>
     </details>
@@ -1043,10 +1078,9 @@
         <tbody>
           <tr><td><code>/</code> / <code>i</code></td><td data-i18n="kb.s.focus">focus the search input</td></tr>
           <tr><td><code>Esc</code></td><td data-i18n="kb.s.blur">return to list mode</td></tr>
-          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code></td><td data-i18n="kb.s.nav">navigate results</td></tr>
           <tr><td><code>Enter</code>, double-click</td><td data-i18n="kb.s.open">reveal match in Files tab</td></tr>
           <tr><td><code>r</code></td><td data-i18n="kb.s.reload">reload current query</td></tr>
-          <tr><td><code>←</code>/<code>→</code>, <code>Shift+←</code>/<code>Shift+→</code></td><td data-i18n="kb.s.hscroll">horizontal scroll (whole row)</td></tr>
+          <tr><td><code>Alt+←</code>/<code>Alt+→</code>, <code>Ctrl+W</code>/<code>Ctrl+U</code></td><td data-i18n="kb.s.wordedit">word-edit the prompt</td></tr>
           <tr><td><code>Home</code> / <code>End</code></td><td data-i18n="kb.s.ends">reset / jump h-scroll</td></tr>
         </tbody>
       </table>
@@ -1057,8 +1091,9 @@
       <table class="kb">
         <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
         <tbody>
-          <tr><td><code>s</code> / <code>u</code></td><td data-i18n="kb.git.stage">stage / unstage</td></tr>
-          <tr><td><code>d</code> → <code>y</code></td><td data-i18n="kb.git.discard">discard unstaged file (confirm)</td></tr>
+          <tr><td><code>s</code> / <code>u</code></td><td data-i18n="kb.git.stage">stage / unstage (file, or every file under a folder)</td></tr>
+          <tr><td><code>d</code> → <code>y</code></td><td data-i18n="kb.git.discard">discard unstaged file / folder (confirm)</td></tr>
+          <tr><td><code>Enter</code> / <code>e</code></td><td data-i18n="kb.git.edit">open selected file in $EDITOR</td></tr>
           <tr><td><code>r</code></td><td data-i18n="kb.git.refresh">refresh</td></tr>
           <tr><td><code>t</code></td><td data-i18n="kb.git.tree">tree / flat view</td></tr>
           <tr><td><code>m</code></td><td data-i18n="kb.git.mode">unified ↔ side-by-side</td></tr>
@@ -1073,7 +1108,10 @@
         <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
         <tbody>
           <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code></td><td data-i18n="kb.graph.nav">move commit selection</td></tr>
-          <tr><td><code>PgUp</code> / <code>PgDn</code></td><td data-i18n="kb.graph.page">page</td></tr>
+          <tr><td><code>V</code></td><td data-i18n="kb.graph.visual">enter visual mode (commit range)</td></tr>
+          <tr><td><code>↑</code>/<code>↓</code>, <code>PgUp</code>/<code>PgDn</code> (visual)</td><td data-i18n="kb.graph.extend">extend range</td></tr>
+          <tr><td><code>Shift+↑</code>/<code>Shift+↓</code>, <code>Shift+Click</code></td><td data-i18n="kb.graph.shiftext">extend range without entering visual</td></tr>
+          <tr><td><code>Esc</code></td><td data-i18n="kb.graph.clear">exit visual / clear range</td></tr>
           <tr><td><code>m</code> / <code>f</code></td><td data-i18n="kb.graph.mode">commit-file diff layout / mode</td></tr>
           <tr><td><code>t</code></td><td data-i18n="kb.graph.tree">tree / flat changed-files</td></tr>
         </tbody>
@@ -1082,10 +1120,10 @@
   </div>
 </section>
 
-<!-- ───────────────────────── §4 install ──────────────────── -->
+<!-- ───────────────────────── §5 install ──────────────────── -->
 <section id="install">
   <div class="content">
-    <h2><span class="num">§4</span><span data-i18n="install.title">Install</span></h2>
+    <h2><span class="num">§5</span><span data-i18n="install.title">Install</span></h2>
     <p class="lede" data-i18n="install.lede">npm picks the right native binary. Supported: macOS (arm64, x64), Linux (arm64, x64), Windows (x64).</p>
 
     <p style="font-size: 13px; color: var(--fg-mute); margin-bottom: 8px;" data-i18n="install.npm">Via npm (recommended):</p>
@@ -1103,20 +1141,27 @@ reef</pre>
 <span class="cmd-accent">cd</span> your-git-repo
 /path/to/reef/target/release/reef</pre>
 
-    <p style="font-size: 13px; color: var(--fg-mute);" data-i18n="install.note">Reef runs anywhere. Outside a git repo, the Git and Graph tabs show a "Not a git repository" placeholder; the Files tab still browses the current directory.</p>
+    <p style="font-size: 13px; color: var(--fg-mute); margin: 16px 0 8px;" data-i18n="install.ssh">Remote over SSH:</p>
+<pre class="codeblock"><span class="comment"># Opens $HOME on host; reef-agent auto-installed</span>
+<span class="cmd-accent">reef</span> --ssh user@host
+
+<span class="comment"># Opens /path on host</span>
+<span class="cmd-accent">reef</span> --ssh user@host:/path</pre>
+
+    <p style="font-size: 13px; color: var(--fg-mute);" data-i18n="install.note">Reef runs anywhere. Outside a git repo, the Git and Graph tabs show a "Not a git repository" placeholder; the Files tab still browses the current directory. In a non-repo with no recent hosts, Reef opens the hosts picker so you always have a visible next step.</p>
   </div>
 </section>
 
-<!-- ───────────────────────── §5 status ───────────────────── -->
+<!-- ───────────────────────── §6 status ───────────────────── -->
 <section id="status">
   <div class="content">
-    <h2><span class="num">§5</span><span data-i18n="status.title">Status</span></h2>
+    <h2><span class="num">§6</span><span data-i18n="status.title">Status</span></h2>
     <p class="lede" data-i18n="status.lede">Shipping early, iterating in the open.</p>
     <p>
       <span class="status-badge">alpha</span>
-      <span data-i18n="status.p1">Single-process Rust binary — no plugins, no IPC. Files, Git, and Graph are all host-native.</span>
+      <span data-i18n="status.p1">Single-process Rust binary — no plugins, no IPC on the local path. Files, Search, Git, and Graph are host-native; remote uses a thin <code>reef-agent</code> daemon over SSH stdio.</span>
     </p>
-    <p data-i18n="status.p2">On the roadmap: fuzzy file search, content grep, and a richer file viewer — all built in, not bolted on.</p>
+    <p data-i18n="status.p2">One codebase, one UI, one key map — local and remote are feature-parity. The shape of the product is settling; expect sharper edges before rough ones.</p>
   </div>
 </section>
 
@@ -1166,27 +1211,38 @@ reef</pre>
     en: {
       'nav.why': 'Why',
       'nav.box': 'Features',
+      'nav.ssh': 'SSH',
       'nav.keys': 'Keys',
       'nav.install': 'Install',
 
       'hero.eyebrow': 'reef · alpha · a terminal workbench',
       'hero.tagline': 'Once AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%.',
-      'hero.subtitle': 'The minimal dev terminal for the AI coding era.',
+      'hero.subtitle': 'The minimal dev terminal for the AI coding era. Works local or over SSH.',
 
       'why.title': 'Why',
       'why.lede': 'The 30-second stance.',
-      'why.p1': "When AI writes most of your code, an IDE's surface shrinks to four things: browsing files, reading files, searching, and walking git diffs before a commit. Reef is a terminal workbench for exactly that — and nothing else.",
-      'why.p2': 'No autocomplete. No linter. No language server. Not even a text editor. Write with your AI tool of choice; come here to read and ship.',
+      'why.p1': "When AI writes most of your code, an IDE's surface shrinks to a handful of things: browsing files, reading files, searching, walking git diffs, and shipping the result. Reef is a terminal workbench for exactly that — and nothing else.",
+      'why.p2': 'No autocomplete. No linter. No language server. Not even a text editor. Write with your AI tool of choice; come here to read, review, and ship — on your laptop or across an SSH connection.',
 
       'box.title': "What's in the box",
-      'box.lede': "Four tabs and two palettes. That's the product.",
-      'box.files': 'Tree navigator with a read-only preview pane. Expand, collapse, page, rebuild.',
+      'box.lede': "Four tabs, a few palettes, and an SSH backend. That's the product.",
+      'box.files': 'Tree navigator with a read-only preview — syntax-highlighted code, inline image rendering (Kitty / iTerm2 / halfblocks), and friendly metadata cards for binaries. Create, rename, and trash entries right from the tree.',
       'box.search': 'Workdir-wide content search (ripgrep-powered, respects <code>.gitignore</code>) with live preview. Modal input / list, whole-row horizontal scroll. <kbd>Space</kbd> <kbd>F</kbd> for an overlay.',
-      'box.git': 'Status, stage/unstage (keyboard or double-click), unified or side-by-side diff, compact or full-file context, discard with confirmation, push / force-push (<code>--force-with-lease</code>) behind a confirm banner.',
-      'box.graph': 'Commit DAG with ref chips and a lane renderer. Select a commit for inline detail and per-file diff — message, author, changed files.',
-      'box.li0': '<strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab).',
-      'box.li1': '<strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor.',
-      'box.li2': '<strong>Persistent prefs</strong> — diff layout and mode survive restarts.',
+      'box.git': 'Status with per-file <code>+N −M</code> numstat. Stage / unstage per file or per folder (keyboard or double-click). Unified or side-by-side diff, compact or full-file, syntax-highlighted. Discard (confirmed) or discard-all. Push / force-push (<code>--force-with-lease</code>) behind a confirm banner.',
+      'box.graph': 'Commit DAG with ref chips and a lane renderer. Select one for inline detail and per-file diff; press <kbd>V</kbd> for vim-style visual mode — pick a range of commits and read the merged diff across them.',
+      'box.li0': '<strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab), <kbd>Ctrl</kbd>+<kbd>O</kbd> opens the SSH hosts picker.',
+      'box.li1': '<strong>Drag-drop file copy</strong> — drop files onto the terminal to enter place mode, then click any directory to copy them there. Works over SSH via the existing ControlMaster.',
+      'box.li2': '<strong>Text selection → system clipboard</strong> — drag inside a preview and Reef copies via OSC 52 (no helper binary, works over SSH). Press <kbd>v</kbd> to drop mouse capture for the terminal\'s native selection instead.',
+      'box.li3': '<strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor, right-click the tree for a context menu.',
+      'box.li4': '<strong>Auto-everything</strong> — light / dark theme via OSC 11, English / 简体中文 via system locale, diff layout + recent hosts persisted across restarts.',
+
+      'ssh.title': 'Remote over SSH',
+      'ssh.lede': 'VSCode Remote SSH, minus the IDE.',
+      'ssh.p1': 'Point Reef at a remote box and get the full Files / Search / Git / Graph UI driven over SSH stdio — same keys, same feature set as local. A tiny <code>reef-agent</code> daemon runs on the remote; Reef installs a version-matched build automatically.',
+      'ssh.li0': '<strong>Auto-deploy</strong> — detects remote OS/arch, downloads the matching agent from GitHub Releases, or uploads from your local build as a fallback. Protocol-version mismatch triggers a forced reinstall.',
+      'ssh.li1': '<strong>One SSH session</strong> — a ControlMaster socket carries JSON-RPC data, <code>scp</code> uploads, and <code>ssh -t</code> <code>$EDITOR</code> passthrough. One connection, one password prompt.',
+      'ssh.li2': '<strong>Hot swap</strong> — press <kbd>Ctrl</kbd>+<kbd>O</kbd> inside Reef to pick a host from <code>~/.ssh/config</code> or recent connections. The backend swaps live, no restart.',
+      'ssh.li3': '<strong>Feature parity</strong> — content search, diffs, staging, commit graph, file-tree create / rename / delete, drag-drop upload — all work the same remote.',
 
       'keys.title': 'Keybindings',
       'keys.lede': 'Everything you need, mapped to one hand.',
@@ -1203,32 +1259,46 @@ reef</pre>
       'kb.g.cycle': 'cycle tabs',
       'kb.g.focus': 'switch focused panel',
       'kb.g.help': 'help',
+      'kb.g.nav': 'navigate',
+      'kb.g.page': 'page',
+      'kb.g.hscroll': 'horizontal scroll',
+      'kb.g.find': 'vim-style find in preview / diff',
       'kb.g.qopen': 'quick-open file (fuzzy path)',
       'kb.g.gsearch': 'global content search overlay',
-      'kb.g.mouse': 'toggle mouse capture (for terminal text selection)',
+      'kb.g.hosts': 'hosts picker (open SSH target)',
+      'kb.g.mouse': 'toggle mouse capture (terminal text selection)',
+      'kb.g.dragkey': 'drag file into terminal',
+      'kb.g.drag': 'enter place mode to copy',
 
-      'kb.f.nav': 'navigate',
-      'kb.f.page': 'page',
-      'kb.f.expand': 'expand/collapse directory',
+      'kb.f.expand': 'expand/collapse directory, or open in $EDITOR',
+      'kb.f.edit': 'open selected file in $EDITOR',
       'kb.f.rebuild': 'rebuild tree',
+      'kb.f.rename': 'rename selected entry',
+      'kb.f.trash': 'move to trash (confirm)',
+      'kb.f.harddel': 'hard-delete (confirm)',
+      'kb.f.rclickkey': 'right-click',
+      'kb.f.rclick': 'open file-tree context menu',
 
       'kb.s.focus': 'focus the search input',
       'kb.s.blur': 'return to list mode',
-      'kb.s.nav': 'navigate results',
       'kb.s.open': 'reveal match in Files tab',
       'kb.s.reload': 'reload current query',
-      'kb.s.hscroll': 'horizontal scroll (whole row)',
+      'kb.s.wordedit': 'word-edit the prompt',
       'kb.s.ends': 'reset / jump h-scroll',
 
-      'kb.git.stage': 'stage / unstage',
-      'kb.git.discard': 'discard unstaged file (confirm)',
+      'kb.git.stage': 'stage / unstage (file, or every file under a folder)',
+      'kb.git.discard': 'discard unstaged file / folder (confirm)',
+      'kb.git.edit': 'open selected file in $EDITOR',
       'kb.git.refresh': 'refresh',
       'kb.git.tree': 'tree / flat view',
       'kb.git.mode': 'unified ↔ side-by-side',
       'kb.git.context': 'compact ↔ full-file diff',
 
       'kb.graph.nav': 'move commit selection',
-      'kb.graph.page': 'page',
+      'kb.graph.visual': 'enter visual mode (commit range)',
+      'kb.graph.extend': 'extend range',
+      'kb.graph.shiftext': 'extend range without entering visual',
+      'kb.graph.clear': 'exit visual / clear range',
       'kb.graph.mode': 'commit-file diff layout / mode',
       'kb.graph.tree': 'tree / flat changed-files',
 
@@ -1236,39 +1306,51 @@ reef</pre>
       'install.lede': 'npm picks the right native binary. Supported: macOS (arm64, x64), Linux (arm64, x64), Windows (x64).',
       'install.npm': 'Via npm (recommended):',
       'install.src': 'Build from source:',
-      'install.note': 'Reef runs anywhere. Outside a git repo, the Git and Graph tabs show a "Not a git repository" placeholder; the Files tab still browses the current directory.',
+      'install.ssh': 'Remote over SSH:',
+      'install.note': 'Reef runs anywhere. Outside a git repo, the Git and Graph tabs show a "Not a git repository" placeholder; the Files tab still browses the current directory. In a non-repo with no recent hosts, Reef opens the hosts picker so you always have a visible next step.',
 
       'status.title': 'Status',
       'status.lede': 'Shipping early, iterating in the open.',
-      'status.p1': 'Single-process Rust binary — no plugins, no IPC. Files, Search, Git, and Graph are all host-native.',
-      'status.p2': 'On the roadmap: a richer file viewer and more palettes — all built in, not bolted on.',
+      'status.p1': 'Single-process Rust binary — no plugins, no IPC on the local path. Files, Search, Git, and Graph are host-native; remote uses a thin <code>reef-agent</code> daemon over SSH stdio.',
+      'status.p2': 'One codebase, one UI, one key map — local and remote are feature-parity. The shape of the product is settling; expect sharper edges before rough ones.',
 
       'footer.license': 'MIT · open source'
     },
     zh: {
       'nav.why': '为什么',
       'nav.box': '功能',
+      'nav.ssh': '远程 SSH',
       'nav.keys': '快捷键',
       'nav.install': '安装',
 
       'hero.eyebrow': 'reef · alpha · 终端工作台',
       'hero.tagline': 'AI 写代码之后，IDE 九成的功能都不需要了。Reef 是剩下的一成。',
-      'hero.subtitle': 'AI 时代的最小开发者终端。',
+      'hero.subtitle': 'AI 时代的最小开发者终端。本地、SSH 一视同仁。',
 
       'why.title': '为什么做这个',
       'why.lede': '三十秒立场。',
-      'why.p1': '当 AI 接管了大部分写代码的工作，IDE 对人真正有用的界面就剩下四样：浏览文件、查看文件、搜索、走查 git diff。Reef 只做这些，别的都不做。',
-      'why.p2': '没有补全，没有 linter，没有 language server，连编辑器都没有。写代码用你顺手的 AI 工具；来这里只是为了读代码和提交。',
+      'why.p1': '当 AI 接管了大部分写代码的工作，IDE 对人真正有用的界面就剩下几样：浏览文件、查看文件、搜索、走查 git diff、把活儿交付出去。Reef 只做这些，别的都不做。',
+      'why.p2': '没有补全，没有 linter，没有 language server，连编辑器都没有。写代码用你顺手的 AI 工具；来这里只负责读、看、提交——在本地，或者远程 SSH 到哪台机器上都行。',
 
       'box.title': '当前功能',
-      'box.lede': '四个标签加两个浮层，就是全部。',
-      'box.files': '文件树导航 + 只读预览面板。展开、折叠、翻页、重建。',
+      'box.lede': '四个标签、几个浮层、一个 SSH 后端，就是全部。',
+      'box.files': '文件树导航 + 只读预览——代码带语法高亮，图片内联渲染（Kitty / iTerm2 / 半块字符），二进制显示友好的元信息卡片。在文件树里直接创建、改名、移到回收站。',
       'box.search': '工作目录内容搜索（基于 ripgrep，遵循 <code>.gitignore</code>），右栏活预览；列表 / 输入两态切换，整行水平滚动。<kbd>Space</kbd> <kbd>F</kbd> 开浮层版。',
-      'box.git': 'status、stage / unstage（键盘或双击）、unified / side-by-side diff、compact / full-file 上下文、带确认的还原（discard）、带确认横条的推送 / 强制推送（<code>--force-with-lease</code>）。',
-      'box.graph': 'commit 图（DAG）+ 引用标签 + lane 渲染。选中一条提交，右侧显示内联详情与单文件 diff——信息、作者、变更文件。',
-      'box.li0': '<strong>浮层</strong>：<kbd>Space</kbd> <kbd>P</kbd> 按模糊路径快速打开文件；<kbd>Space</kbd> <kbd>F</kbd> 开全局内容搜索（跟 Search 标签共用后端，<kbd>Alt</kbd>+<kbd>Enter</kbd> 可把当前查询 pin 到标签里）。',
-      'box.li1': '<strong>键盘优先</strong>，鼠标只在合适的地方出现——拖动分隔条、双击切换暂存、在光标下的面板里滚动。',
-      'box.li2': '<strong>记住偏好</strong>：diff 的布局和模式跨会话保留。',
+      'box.git': 'status 带每文件 <code>+N −M</code> 统计。按文件或按文件夹暂存 / 取消暂存（键盘或双击）。unified / side-by-side diff，compact / full-file 上下文，语法高亮。带确认的单条或一次性全部还原。带确认横条的推送 / 强制推送（<code>--force-with-lease</code>）。',
+      'box.graph': 'commit 图（DAG）+ 引用标签 + lane 渲染。选中一条提交看内联详情与单文件 diff；按 <kbd>V</kbd> 进 vim 风格 visual 模式——选一段 commit，看整段合并后的 diff。',
+      'box.li0': '<strong>浮层</strong>：<kbd>Space</kbd> <kbd>P</kbd> 按模糊路径快速打开文件；<kbd>Space</kbd> <kbd>F</kbd> 开全局内容搜索（跟 Search 标签共用后端，<kbd>Alt</kbd>+<kbd>Enter</kbd> 把查询 pin 到标签里）；<kbd>Ctrl</kbd>+<kbd>O</kbd> 打开 SSH hosts 选择器。',
+      'box.li1': '<strong>拖拽复制文件</strong>——把文件拖进终端进入 place 模式，点一个目录就复制过去。SSH 下走已有的 ControlMaster 上传。',
+      'box.li2': '<strong>文本选择 → 系统剪贴板</strong>——在预览里拖选，Reef 通过 OSC 52 写进剪贴板（无需辅助二进制，SSH 下也行）。按 <kbd>v</kbd> 关掉鼠标捕获则交给终端原生选择。',
+      'box.li3': '<strong>键盘优先</strong>，鼠标只在值得的地方出现——拖分隔条、双击切换暂存、在光标下的面板滚动、右键文件树弹菜单。',
+      'box.li4': '<strong>自动一切</strong>——OSC 11 判主题明暗，系统 locale 选中英文，diff 布局 + 最近主机跨会话保留。',
+
+      'ssh.title': '远程 SSH',
+      'ssh.lede': 'VSCode Remote SSH，但没有 IDE。',
+      'ssh.p1': '让 Reef 指向一台远程机器，拿到完整的 Files / Search / Git / Graph UI——同一套键位，同一套功能，都通过 SSH stdio 驱动。远端跑一个小小的 <code>reef-agent</code> 守护进程，Reef 会自动装好版本匹配的那一份。',
+      'ssh.li0': '<strong>自动部署</strong>——嗅探远端 OS/arch，优先从 GitHub Releases 下载匹配 agent，拉不到就从本地 build 上传。协议版本不匹配会触发强制重装。',
+      'ssh.li1': '<strong>一条 SSH 会话</strong>——ControlMaster socket 走 JSON-RPC 数据、<code>scp</code> 上传、<code>ssh -t</code> <code>$EDITOR</code> 透传。一次连接，一次密码。',
+      'ssh.li2': '<strong>热切换</strong>——在 Reef 里按 <kbd>Ctrl</kbd>+<kbd>O</kbd> 从 <code>~/.ssh/config</code> 或最近连接里挑一个主机，后端即时切换，不用重启。',
+      'ssh.li3': '<strong>功能等效</strong>——内容搜索、diff、暂存、commit 图、文件树创建 / 改名 / 删除、拖拽上传——远程和本地一模一样。',
 
       'keys.title': '快捷键',
       'keys.lede': '所有你要的，单手覆盖。',
@@ -1285,32 +1367,46 @@ reef</pre>
       'kb.g.cycle': '循环切换标签',
       'kb.g.focus': '切换聚焦的面板',
       'kb.g.help': '帮助',
+      'kb.g.nav': '导航',
+      'kb.g.page': '翻页',
+      'kb.g.hscroll': '水平滚动',
+      'kb.g.find': '预览 / diff 里的 vim 风格查找',
       'kb.g.qopen': '按模糊路径快速打开文件',
       'kb.g.gsearch': '全局内容搜索浮层',
+      'kb.g.hosts': 'hosts 选择器（打开 SSH 连接）',
       'kb.g.mouse': '关/开鼠标捕获（让终端原生选择文本）',
+      'kb.g.dragkey': '拖文件进终端',
+      'kb.g.drag': '进入 place 模式复制',
 
-      'kb.f.nav': '导航',
-      'kb.f.page': '翻页',
-      'kb.f.expand': '展开 / 折叠目录',
+      'kb.f.expand': '展开 / 折叠目录，或用 $EDITOR 打开',
+      'kb.f.edit': '用 $EDITOR 打开选中文件',
       'kb.f.rebuild': '重建文件树',
+      'kb.f.rename': '重命名选中项',
+      'kb.f.trash': '移到回收站（需确认）',
+      'kb.f.harddel': '硬删除（需确认）',
+      'kb.f.rclickkey': '右键',
+      'kb.f.rclick': '打开文件树右键菜单',
 
       'kb.s.focus': '聚焦搜索输入',
       'kb.s.blur': '退回列表模式',
-      'kb.s.nav': '结果导航',
       'kb.s.open': '切到 Files 标签并定位到文件',
       'kb.s.reload': '重跑当前查询',
-      'kb.s.hscroll': '整行水平滚动',
+      'kb.s.wordedit': '提示符里的词级编辑',
       'kb.s.ends': '重置 / 跳到末尾',
 
-      'kb.git.stage': '暂存 / 取消暂存',
-      'kb.git.discard': '还原未暂存的文件（需确认）',
+      'kb.git.stage': '暂存 / 取消暂存（文件或文件夹下全部）',
+      'kb.git.discard': '还原未暂存的文件 / 文件夹（需确认）',
+      'kb.git.edit': '用 $EDITOR 打开选中文件',
       'kb.git.refresh': '刷新',
       'kb.git.tree': '树形 / 扁平 切换',
       'kb.git.mode': 'unified / side-by-side',
       'kb.git.context': 'compact / full-file',
 
       'kb.graph.nav': '移动选中的 commit',
-      'kb.graph.page': '翻页',
+      'kb.graph.visual': '进入 visual 模式（选一段 commit）',
+      'kb.graph.extend': '扩展区间',
+      'kb.graph.shiftext': '不进 visual 模式直接扩选',
+      'kb.graph.clear': '退出 visual / 清空区间',
       'kb.graph.mode': 'commit 文件 diff 的布局 / 模式',
       'kb.graph.tree': '树形 / 扁平 显示变更文件',
 
@@ -1318,12 +1414,13 @@ reef</pre>
       'install.lede': 'npm 会自动选择当前平台对应的原生二进制。支持：macOS (arm64, x64)、Linux (arm64, x64)、Windows (x64)。',
       'install.npm': '通过 npm（推荐）：',
       'install.src': '从源码构建：',
-      'install.note': 'Reef 在任何目录都能启动。不在 git 仓库里时，Git 和 Graph 标签显示 "Not a git repository" 占位，Files 标签仍然可以浏览当前目录。',
+      'install.ssh': '远程 SSH：',
+      'install.note': 'Reef 在任何目录都能启动。不在 git 仓库里时，Git 和 Graph 标签显示 "Not a git repository" 占位，Files 标签仍然可以浏览当前目录。在非仓库且没有历史主机时，Reef 会自动弹出 hosts 选择器，让你始终有个可见的下一步。',
 
       'status.title': '当前状态',
       'status.lede': '早期发布，公开迭代。',
-      'status.p1': '单进程 Rust 二进制——没有插件，没有 IPC。Files、Search、Git、Graph 全部 host 原生。',
-      'status.p2': '规划中：更完整的文件预览、更多浮层——都内建在 host 里，而不是外挂进来。',
+      'status.p1': '单进程 Rust 二进制——本地路径没有插件、没有 IPC。Files、Search、Git、Graph 都是 host 原生；远程靠一个很薄的 <code>reef-agent</code> 守护进程通过 SSH stdio 驱动。',
+      'status.p2': '一套代码、一个 UI、一套键位——本地和远程的功能一致。产品形态正在定型，还会先磨利再磨光。',
 
       'footer.license': 'MIT · 开源'
     }
