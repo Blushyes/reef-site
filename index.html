@@ -1,2161 +1,260 @@
 <!doctype html>
-<html lang="en" data-lang="en">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Reef — the minimal dev terminal for the AI coding era</title>
-<meta name="description" content="Once AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%. Keyboard-first file tree, ripgrep search, git diff, commit graph — local or over SSH." />
-<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='50%25' y='55%25' font-family='JetBrains Mono,monospace' font-size='18' font-weight='700' text-anchor='middle' dominant-baseline='middle' fill='%23FF7F50'>R</text></svg>" />
+<meta name="description" content="When AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10% — a single-binary terminal workbench for browsing, reviewing, and shipping, locally or over SSH." />
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='50%25' y='55%25' font-family='JetBrains Mono,monospace' font-size='18' font-weight='700' text-anchor='middle' dominant-baseline='middle' fill='%23FF6B3D'>R</text></svg>" />
+<meta property="og:title" content="Reef — the minimal dev terminal for the AI coding era" />
+<meta property="og:description" content="When AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%." />
+<meta property="og:image" content="https://github.com/Blushyes/reef/releases/download/v0.33.0/reef.png" />
+<meta property="og:url" content="https://blushyes.github.io/reef-site/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0a;
-    --bg-soft: #0f0f0f;
-    --bg-elev: #141414;
-    --line: #1f1f1f;
-    --line-soft: #171717;
-    --fg: #e8e8e8;
-    --fg-mute: #8a8a8a;
-    --fg-dim: #5a5a5a;
-    --accent: #FF7F50;
-    --accent-soft: rgba(255, 127, 80, 0.12);
-    --add: #6ec27a;
-    --del: #e07a7a;
-    --add-bg: rgba(110, 194, 122, 0.07);
-    --del-bg: rgba(224, 122, 122, 0.07);
-    --content: 740px;
+    --bg: #fbfbfb;
+    --paper: #ffffff;
+    --fg: #0a0a0a;
+    --fg-mute: #525252;
+    --fg-dim: #a3a3a3;
+    --line: #e7e7e7;
+    --line-soft: #f1f1f1;
+    --accent: #FF6B3D;
+    --accent-tint: rgba(255, 107, 61, 0.08);
   }
-
   * { box-sizing: border-box; }
-
   html, body {
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     background: var(--bg);
     color: var(--fg);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 15px;
-    line-height: 1.65;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
   }
+  a { color: var(--fg); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  code, pre { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+  code { font-size: 0.85em; background: var(--line-soft); padding: 1px 6px; border-radius: 4px; }
 
-  a {
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color 120ms ease;
-  }
-  a:hover { border-bottom-color: var(--accent); }
-
-  code, pre, .mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-
-  code {
-    font-size: 0.88em;
-    background: var(--bg-elev);
-    border: 1px solid var(--line);
-    padding: 1px 6px;
-    border-radius: 4px;
-    color: var(--fg);
-  }
-
-  pre {
-    font-size: 12.5px;
-    line-height: 1.5;
-    margin: 0;
-    white-space: pre;
-    overflow-x: auto;
-  }
-
-  hr {
-    border: none;
-    border-top: 1px solid var(--line);
-    margin: 48px 0;
-  }
-
-  /* ── layout ──────────────────────────────────── */
-  .page {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px 28px 80px;
-  }
-
-  .content {
-    max-width: var(--content);
-  }
-
-  /* ── nav ─────────────────────────────────────── */
+  /* ── nav ────────────────────────────────────── */
   nav.top {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 64px;
-    font-size: 13px;
-    color: var(--fg-mute);
+    font-size: 14px;
   }
-  nav.top .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--fg);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-  nav.top .brand .dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    background: var(--accent);
-    border-radius: 2px;
-  }
-  nav.top .nav-links { display: flex; gap: 22px; align-items: center; }
-  nav.top .nav-links a {
-    color: var(--fg-mute);
-    border-bottom: none;
-  }
-  nav.top .nav-links a:hover { color: var(--fg); }
-  nav.top .lang-toggle {
-    border: 1px solid var(--line);
-    background: transparent;
-    color: var(--fg-mute);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 4px 9px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 120ms ease;
-  }
-  nav.top .lang-toggle:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+  nav.top .brand { font-weight: 700; font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
+  nav.top .brand .mark { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 16px; line-height: 1; }
+  nav.top .links { display: flex; gap: 24px; color: var(--fg-mute); }
+  nav.top .links a:hover { color: var(--fg); }
 
-  /* ── hero ────────────────────────────────────── */
+  /* ── hero ───────────────────────────────────── */
   .hero {
-    position: relative;
-    margin-bottom: 72px;
-  }
-  .hero::before {
-    content: "";
-    position: absolute;
-    top: -40px; left: -80px;
-    width: 480px; height: 360px;
-    background: radial-gradient(ellipse at center, rgba(255, 127, 80, 0.06), transparent 65%);
-    pointer-events: none;
-    z-index: -1;
-  }
-  .hero .eyebrow {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--fg-dim);
-    margin-bottom: 20px;
+    text-align: center;
+    padding: 64px 24px 56px;
+    max-width: 820px;
+    margin: 0 auto;
   }
   .hero h1 {
-    font-size: clamp(26px, 3.3vw, 36px);
-    line-height: 1.2;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin: 0 0 10px;
-    max-width: 680px;
+    font-size: 52px;
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
   }
-  .hero .subtag {
+  .hero h1 .accent { color: var(--accent); }
+  .hero .lead {
+    font-size: 19px;
     color: var(--fg-mute);
-    font-size: 15px;
-    margin: 0 0 28px;
-    max-width: 620px;
+    max-width: 600px;
+    margin: 0 auto 40px;
+    line-height: 1.55;
   }
-
-  .cta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 44px;
-  }
-  .install-chip {
+  .ctas { display: inline-flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .cta-install {
+    background: var(--fg);
+    color: var(--paper);
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
     display: inline-flex;
     align-items: center;
-    gap: 0;
-    background: var(--bg-elev);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    overflow: hidden;
+    gap: 10px;
+    transition: background 120ms ease;
   }
-  .install-chip .prompt {
-    color: var(--fg-dim);
-    padding: 8px 4px 8px 12px;
-    user-select: none;
-  }
-  .install-chip .cmd {
-    color: var(--fg);
-    padding: 8px 10px 8px 6px;
-  }
-  .install-chip .cmd .accent { color: var(--accent); }
-  .install-chip .copy-btn {
-    border: none;
-    border-left: 1px solid var(--line);
-    background: transparent;
+  .cta-install:hover { color: var(--paper); background: #2a2a2a; }
+  .cta-install .copy { color: var(--fg-dim); font-size: 11px; padding-left: 10px; border-left: 1px solid #404040; }
+  .cta-gh {
     color: var(--fg-mute);
-    padding: 8px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 120ms ease;
+    padding: 12px 14px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cta-gh:hover { color: var(--fg); }
+  .cta-gh svg { width: 16px; height: 16px; }
+
+  /* ── screenshot ──────────────────────────────── */
+  .shot {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.18), 0 8px 24px -12px rgba(0,0,0,0.08);
+  }
+
+  /* ── features ────────────────────────────────── */
+  section {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 64px 24px;
+  }
+  section .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .install-chip .copy-btn:hover {
-    background: var(--accent-soft);
     color: var(--accent);
+    margin-bottom: 12px;
+  }
+  section h2 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 40px;
   }
 
-  .gh-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--fg-mute);
-    font-size: 13px;
-    padding: 8px 12px;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    border-bottom: 1px solid var(--line);
-    font-family: 'JetBrains Mono', monospace;
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px 48px;
   }
-  .gh-link:hover {
-    color: var(--fg);
-    border-color: var(--fg-dim);
-  }
-  .gh-link svg { width: 14px; height: 14px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; gap: 28px; } }
+  .feat .name { font-weight: 600; font-size: 16px; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 8px; }
+  .feat .name::before { content: ''; width: 6px; height: 6px; border-radius: 999px; background: var(--accent); display: inline-block; }
+  .feat .desc { color: var(--fg-mute); font-size: 14.5px; line-height: 1.6; }
 
-  /* ── simulated tui ───────────────────────────── */
-  .tui {
-    background: var(--bg-soft);
+  /* ── install ─────────────────────────────────── */
+  pre {
+    background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,127,80,0.02);
-  }
-  .tui .chrome {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 12px;
-    background: #080808;
-    border-bottom: 1px solid var(--line);
-  }
-  .tui .chrome .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #2a2a2a;
-  }
-  .tui .chrome .label {
-    margin-left: 12px;
-    color: var(--fg-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-  }
-  /* tui body — HTML/CSS layout, not ASCII */
-  .tui-body {
-    background: var(--bg-soft);
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: var(--fg);
-  }
-  .tui-tabs {
-    display: flex;
-    align-items: stretch;
-    border-bottom: 1px solid var(--line);
-    font-size: 12px;
-  }
-  .tui-tabs .tab {
-    padding: 8px 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--fg-mute);
-    border-bottom: 1px solid transparent;
-    margin-bottom: -1px;
-  }
-  .tui-tabs .tab .kbd { color: var(--fg-dim); font-size: 11px; }
-  .tui-tabs .tab.on { color: var(--fg); }
-  .tui-tabs .tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-  .tui-tabs .tab.active .kbd { color: var(--accent); }
-  /* Inline <mark> used by the Search demo's matched-range highlight. Accent
-     bg + dark fg so it reads against both light and dark syntax rows. */
-  mark {
-    background: var(--accent);
-    color: var(--bg);
-    padding: 0 2px;
-    border-radius: 2px;
-  }
-  /* <kbd> hints inline in prose (Space P, Alt+Enter, etc.) — a little
-     chrome so they don't disappear into body text. */
-  kbd {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-    font-size: 0.85em;
-    color: var(--fg);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    padding: 0 4px;
-  }
-  .tui-tabs .spacer { flex: 1; }
-  .tui-tabs .branch {
-    padding: 8px 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--fg-mute);
-    font-size: 11.5px;
-  }
-  .tui-tabs .branch .dot-coral { color: var(--accent); }
-  .tui-tabs .branch .meta { color: var(--fg-dim); }
-
-  .tui-split {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    min-height: 300px;
-  }
-  .tui-diff {
-    padding: 6px 0 4px;
+    padding: 18px 22px;
     overflow-x: auto;
-    min-width: 0;
-  }
-
-  .tui-hints {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
-    padding: 9px 14px;
-    border-top: 1px solid var(--line);
-    color: var(--fg-mute);
-    font-size: 11.5px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .tui-hints .key { color: var(--fg-dim); }
-  .tui-hints .status {
-    margin-left: auto;
-    color: var(--accent);
-  }
-
-  /* ── interactive state ──────────────────────── */
-  .tui { position: relative; transition: border-color 140ms ease; }
-  .tui.focused { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft), 0 20px 60px -20px rgba(0,0,0,0.6); }
-  .tui-body { position: relative; outline: none; }
-
-  .tui-focus-hint {
-    position: absolute;
-    top: 10px;
-    right: 14px;
-    padding: 2px 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px;
-    color: var(--fg-dim);
-    background: rgba(10,10,10,0.75);
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    pointer-events: none;
-    opacity: 0.85;
-    transition: opacity 160ms ease;
-    z-index: 2;
-  }
-  .tui.focused .tui-focus-hint { opacity: 0; }
-
-  /* tab buttons (interactive) */
-  .tui-tabs .tab {
-    cursor: pointer;
-    background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    font: inherit;
-    color: var(--fg-mute);
-    user-select: none;
-  }
-  .tui-tabs .tab:hover { color: var(--fg); }
-
-  /* panels */
-  .tui-panel {
-    min-width: 0;
-    overflow: hidden;
-  }
-  .tui-left {
-    padding: 8px 0;
-    border-right: 1px solid var(--line);
-    max-height: 360px;
-    overflow-y: auto;
-  }
-  .tui-right {
-    padding: 8px 0 4px;
-    overflow: auto;
-    max-height: 360px;
-  }
-  .tui-panel.focused-panel {
-    background: rgba(255,127,80,0.015);
-  }
-
-  /* row base (unified for all list panels) */
-  .tui-row {
-    padding: 2px 14px;
-    display: flex;
-    align-items: center;
-    color: var(--fg);
-    white-space: nowrap;
-    cursor: pointer;
-    border-left: 2px solid transparent;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .tui-row.dim { color: var(--fg-dim); }
-  .tui-row:hover { background: rgba(255,255,255,0.02); }
-  .tui-row.selected { background: #1a1a1a; }
-  .tui-panel.focused-panel .tui-row.selected {
-    background: rgba(255,127,80,0.10);
-    border-left-color: var(--accent);
-  }
-  .tui-row .marker {
-    display: inline-block;
-    width: 14px;
-    color: var(--fg-dim);
-    flex-shrink: 0;
-  }
-  .tui-row .marker.coral { color: var(--accent); }
-  .tui-row.indent-1 { padding-left: 26px; }
-  .tui-row.indent-2 { padding-left: 42px; }
-  .tui-row.indent-3 { padding-left: 58px; }
-  .tui-row.indent-4 { padding-left: 74px; }
-
-  /* git status */
-  .tui-section-head {
-    padding: 4px 14px 2px;
-    color: var(--fg-dim);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-  .tui-row .status-sign {
-    display: inline-block;
-    width: 14px;
-    text-align: center;
-    margin-right: 8px;
-    font-weight: 600;
-  }
-  .tui-row .status-sign.add { color: var(--add); }
-  .tui-row .status-sign.mod { color: var(--accent); }
-  .tui-row .status-sign.del { color: var(--del); }
-  .tui-row .status-sign.untracked { color: var(--fg-dim); }
-
-  /* graph */
-  .tui-row .graph-col {
-    display: inline-block;
-    width: 62px;
-    flex-shrink: 0;
-    white-space: pre;
-    color: var(--fg-mute);
-  }
-  .tui-row .graph-col .node { color: var(--accent); }
-  .tui-row .graph-col .node.dim { color: var(--fg-dim); }
-  .tui-row .commit-oid {
-    display: inline-block;
-    width: 70px;
-    flex-shrink: 0;
-    color: var(--fg-dim);
-    margin-right: 10px;
-  }
-  .tui-row .commit-msg {
-    color: var(--fg);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .tui-row .commit-meta {
-    display: inline-block;
-    color: var(--fg-dim);
-    font-size: 11px;
-    margin-left: 10px;
-    flex-shrink: 0;
-  }
-
-  /* preview pane */
-  .tui-view-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 4px 16px 8px;
-    color: var(--fg-dim);
-    font-size: 11.5px;
-    white-space: nowrap;
-    border-bottom: 1px solid var(--line-soft);
-    margin-bottom: 4px;
-  }
-  .tui-view-head .hunk { color: #8aa3ff; }
-  .tui-preview-row {
-    display: grid;
-    grid-template-columns: 44px minmax(0, 1fr);
-    padding-right: 14px;
-    color: var(--fg-mute);
-  }
-  .tui-preview-row .ln {
-    text-align: right;
-    padding-right: 10px;
-    color: var(--fg-dim);
-  }
-  .tui-preview-row .code { white-space: pre; }
-  .tui-empty {
-    padding: 24px 16px;
-    color: var(--fg-dim);
-    text-align: center;
-    font-size: 12px;
-  }
-
-  /* diff — unified */
-  .tui-diff-row {
-    display: grid;
-    grid-template-columns: 22px 44px minmax(0, 1fr);
-    align-items: baseline;
-    padding-right: 14px;
-  }
-  .tui-diff-row .sign { text-align: center; color: var(--fg-dim); }
-  .tui-diff-row .ln { text-align: right; padding-right: 10px; color: var(--fg-dim); }
-  .tui-diff-row .code { color: var(--fg-mute); white-space: pre; }
-  .tui-diff-row.add { background: var(--add-bg); }
-  .tui-diff-row.add .sign,
-  .tui-diff-row.add .code,
-  .tui-diff-row.add .ln { color: var(--add); }
-  .tui-diff-row.del { background: var(--del-bg); }
-  .tui-diff-row.del .sign,
-  .tui-diff-row.del .code,
-  .tui-diff-row.del .ln { color: var(--del); }
-
-  /* diff — split */
-  .tui-diff.split .tui-diff-row {
-    grid-template-columns: 36px minmax(0, 1fr) 1px 36px minmax(0, 1fr);
-    column-gap: 0;
-  }
-  .tui-diff.split .tui-diff-row .ln.left { padding-right: 8px; color: var(--fg-dim); text-align: right; }
-  .tui-diff.split .tui-diff-row .code.left { white-space: pre; padding-right: 10px; }
-  .tui-diff.split .tui-diff-row .divider { background: var(--line); width: 1px; }
-  .tui-diff.split .tui-diff-row .ln.right { padding-right: 8px; color: var(--fg-dim); text-align: right; padding-left: 10px; }
-  .tui-diff.split .tui-diff-row .code.right { white-space: pre; }
-  .tui-diff.split .tui-diff-row.add .code.right,
-  .tui-diff.split .tui-diff-row.add .ln.right { color: var(--add); background: var(--add-bg); }
-  .tui-diff.split .tui-diff-row.del .code.left,
-  .tui-diff.split .tui-diff-row.del .ln.left { color: var(--del); background: var(--del-bg); }
-  .tui-diff.split .tui-diff-row.chg .code.left,
-  .tui-diff.split .tui-diff-row.chg .ln.left { color: var(--del); background: var(--del-bg); }
-  .tui-diff.split .tui-diff-row.chg .code.right,
-  .tui-diff.split .tui-diff-row.chg .ln.right { color: var(--add); background: var(--add-bg); }
-
-  /* commit detail */
-  .tui-commit {
-    padding: 4px 16px;
-    font-size: 12px;
-    line-height: 1.7;
-  }
-  .tui-commit h4 {
-    margin: 0 0 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--fg);
-    font-weight: 500;
-  }
-  .tui-commit .meta { color: var(--fg-dim); font-size: 11.5px; }
-  .tui-commit .meta code { background: none; border: none; padding: 0; color: var(--accent); }
-  .tui-commit .body { color: var(--fg-mute); margin: 12px 0; white-space: pre-wrap; }
-  .tui-commit .files {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--line-soft);
-  }
-  .tui-commit .files-head {
-    color: var(--fg-dim);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 6px;
-  }
-  .tui-commit .files .file {
-    display: flex;
-    gap: 10px;
-    font-size: 11.5px;
-    color: var(--fg-mute);
-  }
-  .tui-commit .files .file .sig { width: 14px; font-weight: 600; color: var(--fg-dim); }
-  .tui-commit .files .file .sig.add { color: var(--add); }
-  .tui-commit .files .file .sig.mod { color: var(--accent); }
-  .tui-commit .files .file .sig.del { color: var(--del); }
-
-  @media (max-width: 720px) {
-    .tui-split { grid-template-columns: minmax(0, 1fr); }
-    .tui-left {
-      border-right: none;
-      border-bottom: 1px solid var(--line);
-      max-height: 160px;
-    }
-    .tui-right { max-height: 260px; }
-    .tui-focus-hint { top: 8px; right: 8px; font-size: 10px; }
-  }
-
-  /* ── section headings ────────────────────────── */
-  section { margin-bottom: 56px; }
-  section > .content > h2 {
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 0 0 6px;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
-  section > .content > h2 .num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--accent);
-    font-weight: 500;
-  }
-  section > .content > .lede {
-    color: var(--fg-mute);
-    font-size: 14px;
-    margin: 0 0 20px;
-  }
-
-  section p { margin: 0 0 14px; }
-  section ul {
-    margin: 0 0 14px;
-    padding: 0;
-    list-style: none;
-  }
-  section ul li {
-    padding: 3px 0 3px 18px;
-    position: relative;
-    color: var(--fg);
-  }
-  section ul li::before {
-    content: "─";
-    position: absolute;
-    left: 0;
-    color: var(--fg-dim);
-    font-family: 'JetBrains Mono', monospace;
-  }
-  section ul li strong { color: var(--fg); font-weight: 600; }
-  section p, section li { color: var(--fg); }
-
-  /* ── mini tui (§2) ───────────────────────────── */
-  .mini-tui {
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    overflow: hidden;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    margin: 14px 0 0;
-  }
-  .mini-tui-head {
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--line);
-    color: var(--accent);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .mini-tui-body {
-    padding: 8px 0;
-    line-height: 1.8;
-  }
-  .mini-tui-body .row {
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
-    color: var(--fg);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .mini-tui-body .row.dim { color: var(--fg-dim); }
-  .mini-tui-body .indent { padding-left: 28px; }
-  .mini-tui-body .marker {
-    display: inline-block;
-    width: 14px;
-    color: var(--fg-dim);
-  }
-  .mini-tui-body .marker.coral { color: var(--accent); }
-  .mini-tui-body .sign {
-    display: inline-block;
-    width: 14px;
-    text-align: center;
-    margin-right: 8px;
-    font-weight: 600;
-  }
-  .mini-tui-body .sign.add { color: var(--add); }
-  .mini-tui-body .sign.del { color: var(--del); }
-  .mini-tui-body .key {
-    display: inline-block;
-    min-width: 30px;
-    color: var(--fg-dim);
-    margin-right: 4px;
-  }
-  .mini-tui-body .row-sep {
-    height: 1px;
-    background: var(--line);
-    margin: 6px 12px;
-  }
-
-  /* ── tables ──────────────────────────────────── */
-  .kb-group { margin-bottom: 24px; }
-  .kb-group summary {
-    cursor: pointer;
-    padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    color: var(--fg);
-    font-size: 13px;
-    font-weight: 500;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: border-color 120ms ease;
-  }
-  .kb-group summary::-webkit-details-marker { display: none; }
-  .kb-group summary:hover { border-color: var(--fg-dim); }
-  .kb-group[open] summary { border-color: var(--accent); color: var(--accent); }
-  .kb-group summary .chevron {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--fg-dim);
-    transition: transform 120ms ease;
-  }
-  .kb-group[open] summary .chevron { transform: rotate(90deg); color: var(--accent); }
-
-  table.kb {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 8px;
-    font-size: 13px;
-  }
-  table.kb th, table.kb td {
-    text-align: left;
-    padding: 8px 14px;
-    border-bottom: 1px solid var(--line-soft);
-  }
-  table.kb th {
-    color: var(--fg-dim);
-    font-weight: 500;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  table.kb td:first-child {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--fg);
-    white-space: nowrap;
-    width: 40%;
-  }
-  table.kb td:last-child { color: var(--fg-mute); }
-  table.kb tr:last-child td { border-bottom: none; }
-
-  /* ── code blocks ─────────────────────────────── */
-  .codeblock {
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin: 14px 0 18px;
-    font-size: 13px;
-    color: var(--fg);
-    overflow-x: auto;
-  }
-  .codeblock .comment { color: var(--fg-dim); }
-  .codeblock .cmd-accent { color: var(--accent); }
-
-  /* ── features split ──────────────────────────── */
-  .feature-pair {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-    margin-top: 12px;
-  }
-  @media (min-width: 820px) {
-    .feature-pair { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-  }
-  .feature-pair h3 {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--fg);
-    margin: 0 0 6px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .feature-pair p {
-    color: var(--fg-mute);
     font-size: 13.5px;
-    margin: 0 0 10px;
+    line-height: 1.75;
+    margin: 16px 0;
   }
-  .feature-pair .mini-tui {
-    margin-top: 6px;
-  }
+  .dim { color: var(--fg-dim); }
+  .acc { color: var(--accent); }
 
-  /* ── status ──────────────────────────────────── */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 10px;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    background: var(--accent-soft);
-    border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-right: 10px;
-  }
+  .platforms { color: var(--fg-mute); font-size: 14px; margin: 16px 0; }
 
   /* ── footer ──────────────────────────────────── */
   footer {
-    margin-top: 64px;
-    padding-top: 28px;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
     border-top: 1px solid var(--line);
+    color: var(--fg-dim);
+    font-size: 13px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    color: var(--fg-dim);
-    font-size: 12px;
-    font-family: 'JetBrains Mono', monospace;
   }
-  footer .foot-links { display: flex; gap: 18px; align-items: center; }
-  footer a {
-    color: var(--fg-mute);
-    border-bottom: none;
-  }
-  footer a:hover { color: var(--accent); }
-
-  .hide { display: none !important; }
-
-  /* ── responsive ──────────────────────────────── */
-  @media (max-width: 480px) {
-    .page { padding: 20px 18px 60px; }
-    nav.top { margin-bottom: 44px; }
-    nav.top .nav-links a:not(.lang-toggle) { display: none; }
-    .hero h1 { font-size: 24px; }
-    .tui-body { font-size: 11.5px; }
-    .tui-split { min-height: 240px; }
-    .install-chip { font-size: 11.5px; }
-    .install-chip .copy-btn { padding: 8px 10px; }
-    section { margin-bottom: 44px; }
-  }
+  footer .links a { color: var(--fg-mute); margin-right: 16px; }
+  footer .links a:hover { color: var(--accent); }
 </style>
 </head>
 <body>
 
-<div class="page">
-
 <nav class="top">
-  <span class="brand"><span class="dot"></span> reef</span>
-  <div class="nav-links">
-    <a href="#why" data-i18n="nav.why">Why</a>
-    <a href="#box" data-i18n="nav.box">Features</a>
-    <a href="#ssh" data-i18n="nav.ssh">SSH</a>
-    <a href="#keys" data-i18n="nav.keys">Keys</a>
-    <a href="#install" data-i18n="nav.install">Install</a>
+  <span class="brand"><span class="mark">❯</span>Reef</span>
+  <div class="links">
+    <a href="#features">Features</a>
+    <a href="#install">Install</a>
     <a href="https://github.com/Blushyes/reef" target="_blank" rel="noopener">GitHub</a>
-    <button class="lang-toggle" id="langToggle" type="button" aria-label="Toggle language">EN</button>
   </div>
 </nav>
 
-<!-- ───────────────────────── hero ───────────────────────── -->
 <header class="hero">
-  <div class="content">
-    <div class="eyebrow" data-i18n="hero.eyebrow">reef · alpha · a terminal workbench</div>
-    <h1 data-i18n="hero.tagline">Once AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%.</h1>
-    <p class="subtag" data-i18n="hero.subtitle">The minimal dev terminal for the AI coding era.</p>
-
-    <div class="cta-row">
-      <span class="install-chip" role="group" aria-label="Install command">
-        <span class="prompt">$</span>
-        <span class="cmd"><span class="accent">npx</span> @reef-tui/cli</span>
-        <button class="copy-btn" id="copyBtn" type="button" data-copy="npx @reef-tui/cli">copy</button>
-      </span>
-      <a class="gh-link" href="https://github.com/Blushyes/reef" target="_blank" rel="noopener">
-        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        Blushyes/reef
-      </a>
-    </div>
-  </div>
-
-  <!-- simulated TUI screenshot -->
-  <div class="tui" aria-label="Simulated Reef TUI screenshot">
-    <div class="chrome">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="label">reef — ~/projects/app — git: main</span>
-    </div>
-    <div class="tui-body" id="tuiBody" tabindex="0" role="application" aria-label="Reef interactive demo. Click to focus, then use 1/2/3/4, j/k, Tab, Enter.">
-      <div class="tui-focus-hint" id="tuiFocusHint" aria-hidden="true">click to interact</div>
-      <div class="tui-tabs" id="tuiTabs"></div>
-      <div class="tui-split">
-        <aside class="tui-panel tui-left" id="tuiLeft" data-panel="left"></aside>
-        <section class="tui-panel tui-right" id="tuiRight" data-panel="right"></section>
-      </div>
-      <div class="tui-hints" id="tuiHints"></div>
-    </div>
+  <h1>The minimal dev terminal <br>for the <span class="accent">AI coding</span> era.</h1>
+  <p class="lead">When AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10% — browsing, reviewing, and shipping, locally or over SSH.</p>
+  <div class="ctas">
+    <a class="cta-install" href="#install" id="copy" data-cmd="npx @reef-tui/cli">
+      <span><span class="dim">$</span> npx @reef-tui/cli</span>
+      <span class="copy">copy</span>
+    </a>
+    <a class="cta-gh" href="https://github.com/Blushyes/reef" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      Blushyes/reef
+    </a>
   </div>
 </header>
 
-<!-- ───────────────────────── §1 why ───────────────────────── -->
-<section id="why">
-  <div class="content">
-    <h2><span class="num">§1</span><span data-i18n="why.title">Why</span></h2>
-    <p class="lede" data-i18n="why.lede">The 30-second stance.</p>
-    <p data-i18n="why.p1">When AI writes most of your code, an IDE's surface shrinks to four things: browsing files, reading files, searching, and walking git diffs before a commit. Reef is a terminal workbench for exactly that — and nothing else.</p>
-    <p data-i18n="why.p2">No autocomplete. No linter. No language server. Not even a text editor. Write with your AI tool of choice; come here to read and ship.</p>
-  </div>
-</section>
-
-<!-- ───────────────────────── §2 what's in the box ─────────── -->
-<section id="box">
-  <div class="content">
-    <h2><span class="num">§2</span><span data-i18n="box.title">What's in the box</span></h2>
-    <p class="lede" data-i18n="box.lede">Four tabs and two palettes. That's the product.</p>
-
-    <div class="feature-pair">
-      <div>
-        <h3>Files tab</h3>
-        <p data-i18n="box.files">Tree navigator with a read-only preview — syntax-highlighted code, inline image rendering (Kitty / iTerm2 / halfblocks), and friendly metadata cards for binaries. Create, rename, and trash entries right from the tree.</p>
-        <div class="mini-tui" aria-hidden="true">
-          <div class="mini-tui-head">Files</div>
-          <div class="mini-tui-body">
-            <div class="row"><span class="marker coral">▾</span>src/</div>
-            <div class="row dim indent"><span class="marker">▸</span>git/</div>
-            <div class="row dim indent"><span class="marker">▸</span>ui/</div>
-            <div class="row"><span class="marker">▸</span>crates/</div>
-            <div class="row dim indent">README.md</div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <h3>Search tab</h3>
-        <p data-i18n="box.search">Workdir-wide content search (ripgrep-powered, respects <code>.gitignore</code>) with live preview. Modal input / list, whole-row horizontal scroll. <kbd>Space</kbd> <kbd>F</kbd> for an overlay.</p>
-        <div class="mini-tui" aria-hidden="true">
-          <div class="mini-tui-head">Search</div>
-          <div class="mini-tui-body">
-            <div class="row"><span class="marker coral">&gt;</span>foo</div>
-            <div class="row-sep"></div>
-            <div class="row"><span class="key">src/app.rs:42</span></div>
-            <div class="row dim"><span class="key">src/app.rs:128</span></div>
-            <div class="row dim"><span class="key">src/lib.rs:12</span></div>
-            <div class="row dim"><span class="key">README.md:8</span></div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <h3>Git tab</h3>
-        <p data-i18n="box.git">Status with per-file <code>+N −M</code> numstat. Stage / unstage per file or per folder (keyboard or double-click). Unified or side-by-side diff, compact or full-file, syntax-highlighted. Discard (confirmed) or discard-all. Push / force-push (<code>--force-with-lease</code>) behind a confirm banner.</p>
-        <div class="mini-tui" aria-hidden="true">
-          <div class="mini-tui-head">Git</div>
-          <div class="mini-tui-body">
-            <div class="row"><span class="sign add">M</span>src/ui.rs<span class="key" style="margin-left:auto;">+12 −3</span></div>
-            <div class="row"><span class="sign add">A</span>src/panel.rs<span class="key" style="margin-left:auto;">+48 −0</span></div>
-            <div class="row"><span class="sign del">D</span>old/scratch.md<span class="key" style="margin-left:auto;">+0 −3</span></div>
-            <div class="row-sep"></div>
-            <div class="row dim"><span class="key">[s/u]</span>stage / unstage</div>
-            <div class="row dim"><span class="key">[m]</span>split view</div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <h3>Graph tab</h3>
-        <p data-i18n="box.graph">Commit DAG with ref chips and a lane renderer. Select one for inline detail and per-file diff; press <kbd>V</kbd> for vim-style visual mode — pick a range of commits and read the merged diff across them.</p>
-        <div class="mini-tui" aria-hidden="true">
-          <div class="mini-tui-head">Graph</div>
-          <div class="mini-tui-body">
-            <div class="row"><span class="marker coral">●</span>a3b1c7f feat(graph)…</div>
-            <div class="row dim"><span class="marker">●</span>034c2bb ci(security)…</div>
-            <div class="row dim"><span class="marker">●</span>9f2a40e feat(host)…</div>
-            <div class="row dim"><span class="marker">●╮</span>5e8b12d merge</div>
-            <div class="row-sep"></div>
-            <div class="row dim"><span class="key">[↵]</span>detail</div>
-            <div class="row dim"><span class="key">[j/k]</span>nav</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <ul style="margin-top: 14px;">
-      <li data-i18n="box.li0"><strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab), <kbd>Ctrl</kbd>+<kbd>O</kbd> opens the SSH hosts picker.</li>
-      <li data-i18n="box.li1"><strong>Drag-drop file copy</strong> — drop files onto the terminal to enter place mode, then click any directory to copy them there. Works over SSH via the existing ControlMaster.</li>
-      <li data-i18n="box.li2"><strong>Text selection → system clipboard</strong> — drag inside a preview and Reef copies via OSC 52 (no helper binary, works over SSH). Press <kbd>v</kbd> to drop mouse capture for the terminal's native selection instead.</li>
-      <li data-i18n="box.li3"><strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor, right-click the tree for a context menu.</li>
-      <li data-i18n="box.li4"><strong>Auto-everything</strong> — light / dark theme via OSC 11, English / 简体中文 via system locale, diff layout + recent hosts persisted across restarts.</li>
-    </ul>
-  </div>
-</section>
-
-<!-- ───────────────────────── §3 remote over ssh ──────────── -->
-<section id="ssh">
-  <div class="content">
-    <h2><span class="num">§3</span><span data-i18n="ssh.title">Remote over SSH</span></h2>
-    <p class="lede" data-i18n="ssh.lede">VSCode Remote SSH, minus the IDE.</p>
-
-    <p data-i18n="ssh.p1">Point Reef at a remote box and get the full Files / Search / Git / Graph UI driven over SSH stdio — same keys, same feature set as local. A tiny <code>reef-agent</code> daemon runs on the remote; Reef installs a version-matched build automatically.</p>
-
-<pre class="codeblock"><span class="comment"># Open remote $HOME on host (reef-agent auto-installed)</span>
-<span class="cmd-accent">reef</span> --ssh user@host
-
-<span class="comment"># Open /path on host</span>
-<span class="cmd-accent">reef</span> --ssh user@host:/path</pre>
-
-    <ul style="margin-top: 14px;">
-      <li data-i18n="ssh.li0"><strong>Auto-deploy</strong> — detects remote OS/arch, downloads the matching agent from GitHub Releases, or uploads from your local build as a fallback. Protocol-version mismatch triggers a forced reinstall.</li>
-      <li data-i18n="ssh.li1"><strong>One SSH session</strong> — a ControlMaster socket carries JSON-RPC data, <code>scp</code> uploads, and <code>ssh -t</code> <code>$EDITOR</code> passthrough. One connection, one password prompt.</li>
-      <li data-i18n="ssh.li2"><strong>Hot swap</strong> — press <kbd>Ctrl</kbd>+<kbd>O</kbd> inside Reef to pick a host from <code>~/.ssh/config</code> or recent connections. The backend swaps live, no restart.</li>
-      <li data-i18n="ssh.li3"><strong>Feature parity</strong> — content search, diffs, staging, commit graph, file-tree create / rename / delete, drag-drop upload — all work the same remote.</li>
-    </ul>
-  </div>
-</section>
-
-<!-- ───────────────────────── §4 keybindings ──────────────── -->
-<section id="keys">
-  <div class="content">
-    <h2><span class="num">§4</span><span data-i18n="keys.title">Keybindings</span></h2>
-    <p class="lede" data-i18n="keys.lede">Everything you need, mapped to one hand.</p>
-
-    <details class="kb-group" open>
-      <summary><span data-i18n="keys.global">Global</span><span class="chevron">›</span></summary>
-      <table class="kb">
-        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
-        <tbody>
-          <tr><td><code>q</code>, <code>Ctrl+C</code></td><td data-i18n="kb.g.quit">quit</td></tr>
-          <tr><td><code>1</code> / <code>2</code> / <code>3</code> / <code>4</code></td><td data-i18n="kb.g.tab">Files / Search / Git / Graph tab</td></tr>
-          <tr><td><code>Tab</code></td><td data-i18n="kb.g.cycle">cycle tabs</td></tr>
-          <tr><td><code>Shift+Tab</code></td><td data-i18n="kb.g.focus">switch focused panel</td></tr>
-          <tr><td><code>h</code></td><td data-i18n="kb.g.help">help</td></tr>
-          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code>, <code>Ctrl+P</code>/<code>Ctrl+N</code></td><td data-i18n="kb.g.nav">navigate</td></tr>
-          <tr><td><code>PgUp</code> / <code>PgDn</code></td><td data-i18n="kb.g.page">page</td></tr>
-          <tr><td><code>←</code>/<code>→</code>, <code>Shift+←</code>/<code>Shift+→</code></td><td data-i18n="kb.g.hscroll">horizontal scroll</td></tr>
-          <tr><td><code>/</code> · <code>?</code> · <code>n</code>/<code>N</code></td><td data-i18n="kb.g.find">vim-style find in preview / diff</td></tr>
-          <tr><td><code>Space p</code></td><td data-i18n="kb.g.qopen">quick-open file (fuzzy path)</td></tr>
-          <tr><td><code>Space f</code></td><td data-i18n="kb.g.gsearch">global content search overlay</td></tr>
-          <tr><td><code>Ctrl+O</code></td><td data-i18n="kb.g.hosts">hosts picker (open SSH target)</td></tr>
-          <tr><td><code>v</code></td><td data-i18n="kb.g.mouse">toggle mouse capture (for terminal text selection)</td></tr>
-          <tr><td data-i18n="kb.g.dragkey">drag file into terminal</td><td data-i18n="kb.g.drag">enter place mode to copy</td></tr>
-        </tbody>
-      </table>
-    </details>
-
-    <details class="kb-group">
-      <summary><span data-i18n="keys.files">Files tab</span><span class="chevron">›</span></summary>
-      <table class="kb">
-        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
-        <tbody>
-          <tr><td><code>Enter</code></td><td data-i18n="kb.f.expand">expand/collapse directory, or open in $EDITOR</td></tr>
-          <tr><td><code>e</code></td><td data-i18n="kb.f.edit">open selected file in $EDITOR</td></tr>
-          <tr><td><code>r</code></td><td data-i18n="kb.f.rebuild">rebuild tree</td></tr>
-          <tr><td><code>F2</code></td><td data-i18n="kb.f.rename">rename selected entry</td></tr>
-          <tr><td><code>d</code> / <code>Del</code> / <code>⌫</code></td><td data-i18n="kb.f.trash">move to trash (confirm)</td></tr>
-          <tr><td><code>Shift+D</code> / <code>Shift+Del</code></td><td data-i18n="kb.f.harddel">hard-delete (confirm)</td></tr>
-          <tr><td data-i18n="kb.f.rclickkey">right-click</td><td data-i18n="kb.f.rclick">open file-tree context menu</td></tr>
-        </tbody>
-      </table>
-    </details>
-
-    <details class="kb-group">
-      <summary><span data-i18n="keys.search">Search tab</span><span class="chevron">›</span></summary>
-      <table class="kb">
-        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
-        <tbody>
-          <tr><td><code>/</code> / <code>i</code></td><td data-i18n="kb.s.focus">focus the search input</td></tr>
-          <tr><td><code>Esc</code></td><td data-i18n="kb.s.blur">return to list mode</td></tr>
-          <tr><td><code>Enter</code>, double-click</td><td data-i18n="kb.s.open">reveal match in Files tab</td></tr>
-          <tr><td><code>r</code></td><td data-i18n="kb.s.reload">reload current query</td></tr>
-          <tr><td><code>Alt+←</code>/<code>Alt+→</code>, <code>Ctrl+W</code>/<code>Ctrl+U</code></td><td data-i18n="kb.s.wordedit">word-edit the prompt</td></tr>
-          <tr><td><code>Home</code> / <code>End</code></td><td data-i18n="kb.s.ends">reset / jump h-scroll</td></tr>
-        </tbody>
-      </table>
-    </details>
-
-    <details class="kb-group">
-      <summary><span data-i18n="keys.git">Git tab</span><span class="chevron">›</span></summary>
-      <table class="kb">
-        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
-        <tbody>
-          <tr><td><code>s</code> / <code>u</code></td><td data-i18n="kb.git.stage">stage / unstage (file, or every file under a folder)</td></tr>
-          <tr><td><code>d</code> → <code>y</code></td><td data-i18n="kb.git.discard">discard unstaged file / folder (confirm)</td></tr>
-          <tr><td><code>Enter</code> / <code>e</code></td><td data-i18n="kb.git.edit">open selected file in $EDITOR</td></tr>
-          <tr><td><code>r</code></td><td data-i18n="kb.git.refresh">refresh</td></tr>
-          <tr><td><code>t</code></td><td data-i18n="kb.git.tree">tree / flat view</td></tr>
-          <tr><td><code>m</code></td><td data-i18n="kb.git.mode">unified ↔ side-by-side</td></tr>
-          <tr><td><code>f</code></td><td data-i18n="kb.git.context">compact ↔ full-file diff</td></tr>
-        </tbody>
-      </table>
-    </details>
-
-    <details class="kb-group">
-      <summary><span data-i18n="keys.graph">Graph tab</span><span class="chevron">›</span></summary>
-      <table class="kb">
-        <thead><tr><th data-i18n="keys.key">Key</th><th data-i18n="keys.action">Action</th></tr></thead>
-        <tbody>
-          <tr><td><code>↑</code>/<code>↓</code>, <code>j</code>/<code>k</code></td><td data-i18n="kb.graph.nav">move commit selection</td></tr>
-          <tr><td><code>V</code></td><td data-i18n="kb.graph.visual">enter visual mode (commit range)</td></tr>
-          <tr><td><code>↑</code>/<code>↓</code>, <code>PgUp</code>/<code>PgDn</code> (visual)</td><td data-i18n="kb.graph.extend">extend range</td></tr>
-          <tr><td><code>Shift+↑</code>/<code>Shift+↓</code>, <code>Shift+Click</code></td><td data-i18n="kb.graph.shiftext">extend range without entering visual</td></tr>
-          <tr><td><code>Esc</code></td><td data-i18n="kb.graph.clear">exit visual / clear range</td></tr>
-          <tr><td><code>m</code> / <code>f</code></td><td data-i18n="kb.graph.mode">commit-file diff layout / mode</td></tr>
-          <tr><td><code>t</code></td><td data-i18n="kb.graph.tree">tree / flat changed-files</td></tr>
-        </tbody>
-      </table>
-    </details>
-  </div>
-</section>
-
-<!-- ───────────────────────── §5 install ──────────────────── -->
-<section id="install">
-  <div class="content">
-    <h2><span class="num">§5</span><span data-i18n="install.title">Install</span></h2>
-    <p class="lede" data-i18n="install.lede">npm picks the right native binary. Supported: macOS (arm64, x64), Linux (arm64, x64), Windows (x64).</p>
-
-    <p style="font-size: 13px; color: var(--fg-mute); margin-bottom: 8px;" data-i18n="install.npm">Via npm (recommended):</p>
-<pre class="codeblock"><span class="comment"># Run without installing</span>
-<span class="cmd-accent">npx</span> @reef-tui/cli
-
-<span class="comment"># Or install globally</span>
-<span class="cmd-accent">npm</span> install -g @reef-tui/cli
-reef</pre>
-
-    <p style="font-size: 13px; color: var(--fg-mute); margin: 16px 0 8px;" data-i18n="install.src">Build from source:</p>
-<pre class="codeblock"><span class="cmd-accent">cargo</span> build --release
-
-<span class="comment"># Run from inside any git repo:</span>
-<span class="cmd-accent">cd</span> your-git-repo
-/path/to/reef/target/release/reef</pre>
-
-    <p style="font-size: 13px; color: var(--fg-mute); margin: 16px 0 8px;" data-i18n="install.ssh">Remote over SSH:</p>
-<pre class="codeblock"><span class="comment"># Opens $HOME on host; reef-agent auto-installed</span>
-<span class="cmd-accent">reef</span> --ssh user@host
-
-<span class="comment"># Opens /path on host</span>
-<span class="cmd-accent">reef</span> --ssh user@host:/path</pre>
-
-    <p style="font-size: 13px; color: var(--fg-mute);" data-i18n="install.note">Reef runs anywhere. Outside a git repo, the Git and Graph tabs show a "Not a git repository" placeholder; the Files tab still browses the current directory. In a non-repo with no recent hosts, Reef opens the hosts picker so you always have a visible next step.</p>
-  </div>
-</section>
-
-<!-- ───────────────────────── §6 status ───────────────────── -->
-<section id="status">
-  <div class="content">
-    <h2><span class="num">§6</span><span data-i18n="status.title">Status</span></h2>
-    <p class="lede" data-i18n="status.lede">Shipping early, iterating in the open.</p>
-    <p>
-      <span class="status-badge">alpha</span>
-      <span data-i18n="status.p1">Single-process Rust binary — no plugins, no IPC on the local path. Files, Search, Git, and Graph are host-native; remote uses a thin <code>reef-agent</code> daemon over SSH stdio.</span>
-    </p>
-    <p data-i18n="status.p2">One codebase, one UI, one key map — local and remote are feature-parity. The shape of the product is settling; expect sharper edges before rough ones.</p>
-  </div>
-</section>
-
-<!-- ───────────────────────── footer ──────────────────────── -->
-<footer>
-  <div class="foot-links">
-    <span>reef</span>
-    <span class="dim" data-i18n="footer.license">MIT · open source</span>
-    <a href="https://github.com/Blushyes/reef" target="_blank" rel="noopener">github</a>
-  </div>
-</footer>
-
+<div class="shot">
+  <img src="https://github.com/Blushyes/reef/releases/download/v0.33.0/reef.png" alt="Reef screenshot" />
 </div>
 
+<section id="features">
+  <div class="label">Features</div>
+  <h2>The 10% that's left.</h2>
+  <div class="grid">
+    <div class="feat"><div class="name">Files</div><div class="desc">Tree + read-only preview; syntax highlighting, inline images (Kitty / iTerm2 / halfblocks).</div></div>
+    <div class="feat"><div class="name">SQLite browser</div><div class="desc">Open any <code>.db</code> to walk schemas, tables, views, indexes, triggers; borderless data grid with type-tinted columns.</div></div>
+    <div class="feat"><div class="name">Search</div><div class="desc">Ripgrep-powered workdir content search with live preview, gitignore-aware.</div></div>
+    <div class="feat"><div class="name">Git</div><div class="desc">Status, diff, stage / unstage / discard / push (including <code>--force-with-lease</code>); unified or side-by-side.</div></div>
+    <div class="feat"><div class="name">Graph</div><div class="desc">Commit DAG with ref chips, inline detail, visual-mode range diffs.</div></div>
+    <div class="feat"><div class="name">Remote over SSH</div><div class="desc">Same UI, same keys, driven by an auto-deployed <code>reef-agent</code> daemon.</div></div>
+    <div class="feat"><div class="name">Drag-and-drop upload</div><div class="desc">From Finder / Explorer onto the terminal. Works over SSH.</div></div>
+    <div class="feat"><div class="name">Auto theme &amp; locale</div><div class="desc">OSC 11 light/dark detection, system-locale, persistent prefs.</div></div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="label">Install</div>
+  <h2>One binary, zero ceremony.</h2>
+<pre><span class="dim">$</span> npx @reef-tui/cli                <span class="dim"># one-off</span>
+<span class="dim">$</span> npm install -g @reef-tui/cli     <span class="dim"># or global</span></pre>
+  <p class="platforms">macOS (arm64, x64) · Linux (arm64, x64) · Windows (x64). Or build from source: <code>cargo build --release</code>.</p>
+<pre><span class="acc">$</span> reef                             <span class="dim"># current directory</span>
+<span class="acc">$</span> reef --ssh user@host             <span class="dim"># remote $HOME (agent auto-installed)</span>
+<span class="acc">$</span> reef --ssh user@host:/path       <span class="dim"># remote /path</span></pre>
+</section>
+
+<footer>
+  <span>Reef · alpha · MIT-licensed.</span>
+  <span class="links">
+    <a href="https://github.com/Blushyes/reef">GitHub</a>
+    <a href="https://www.npmjs.com/package/@reef-tui/cli">npm</a>
+  </span>
+</footer>
+
 <script>
-  // ── copy install command ──────────────────────────
-  (function() {
-    const btn = document.getElementById('copyBtn');
-    if (!btn) return;
-    btn.addEventListener('click', async () => {
-      const text = btn.getAttribute('data-copy') || '';
-      try {
-        await navigator.clipboard.writeText(text);
-        const original = btn.textContent;
-        btn.textContent = 'copied';
-        btn.style.color = 'var(--accent)';
-        setTimeout(() => { btn.textContent = original; btn.style.color = ''; }, 1200);
-      } catch (e) {
-        // fallback
-        const r = document.createRange();
-        const s = document.createElement('span');
-        s.textContent = text;
-        document.body.appendChild(s);
-        r.selectNode(s);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(r);
-        document.execCommand('copy');
-        document.body.removeChild(s);
-        btn.textContent = 'copied';
-        setTimeout(() => { btn.textContent = 'copy'; }, 1200);
-      }
-    });
-  })();
-
-  // ── language toggle (vanilla, tiny) ───────────────
-  const I18N = {
-    en: {
-      'nav.why': 'Why',
-      'nav.box': 'Features',
-      'nav.ssh': 'SSH',
-      'nav.keys': 'Keys',
-      'nav.install': 'Install',
-
-      'hero.eyebrow': 'reef · alpha · a terminal workbench',
-      'hero.tagline': 'Once AI writes your code, 90% of an IDE becomes dead weight. Reef is the other 10%.',
-      'hero.subtitle': 'The minimal dev terminal for the AI coding era. Works local or over SSH.',
-
-      'why.title': 'Why',
-      'why.lede': 'The 30-second stance.',
-      'why.p1': "When AI writes most of your code, an IDE's surface shrinks to a handful of things: browsing files, reading files, searching, walking git diffs, and shipping the result. Reef is a terminal workbench for exactly that — and nothing else.",
-      'why.p2': 'No autocomplete. No linter. No language server. Not even a text editor. Write with your AI tool of choice; come here to read, review, and ship — on your laptop or across an SSH connection.',
-
-      'box.title': "What's in the box",
-      'box.lede': "Four tabs, a few palettes, and an SSH backend. That's the product.",
-      'box.files': 'Tree navigator with a read-only preview — syntax-highlighted code, inline image rendering (Kitty / iTerm2 / halfblocks), and friendly metadata cards for binaries. Create, rename, and trash entries right from the tree.',
-      'box.search': 'Workdir-wide content search (ripgrep-powered, respects <code>.gitignore</code>) with live preview. Modal input / list, whole-row horizontal scroll. <kbd>Space</kbd> <kbd>F</kbd> for an overlay.',
-      'box.git': 'Status with per-file <code>+N −M</code> numstat. Stage / unstage per file or per folder (keyboard or double-click). Unified or side-by-side diff, compact or full-file, syntax-highlighted. Discard (confirmed) or discard-all. Push / force-push (<code>--force-with-lease</code>) behind a confirm banner.',
-      'box.graph': 'Commit DAG with ref chips and a lane renderer. Select one for inline detail and per-file diff; press <kbd>V</kbd> for vim-style visual mode — pick a range of commits and read the merged diff across them.',
-      'box.li0': '<strong>Palettes</strong> — <kbd>Space</kbd> <kbd>P</kbd> quick-opens a file by fuzzy path, <kbd>Space</kbd> <kbd>F</kbd> launches global content search (same backend as the Search tab; <kbd>Alt</kbd>+<kbd>Enter</kbd> pins the query into the tab), <kbd>Ctrl</kbd>+<kbd>O</kbd> opens the SSH hosts picker.',
-      'box.li1': '<strong>Drag-drop file copy</strong> — drop files onto the terminal to enter place mode, then click any directory to copy them there. Works over SSH via the existing ControlMaster.',
-      'box.li2': '<strong>Text selection → system clipboard</strong> — drag inside a preview and Reef copies via OSC 52 (no helper binary, works over SSH). Press <kbd>v</kbd> to drop mouse capture for the terminal\'s native selection instead.',
-      'box.li3': '<strong>Keyboard first</strong>, mouse where it earns its keep — drag to resize the split, double-click to toggle staging, scroll the panel under the cursor, right-click the tree for a context menu.',
-      'box.li4': '<strong>Auto-everything</strong> — light / dark theme via OSC 11, English / 简体中文 via system locale, diff layout + recent hosts persisted across restarts.',
-
-      'ssh.title': 'Remote over SSH',
-      'ssh.lede': 'VSCode Remote SSH, minus the IDE.',
-      'ssh.p1': 'Point Reef at a remote box and get the full Files / Search / Git / Graph UI driven over SSH stdio — same keys, same feature set as local. A tiny <code>reef-agent</code> daemon runs on the remote; Reef installs a version-matched build automatically.',
-      'ssh.li0': '<strong>Auto-deploy</strong> — detects remote OS/arch, downloads the matching agent from GitHub Releases, or uploads from your local build as a fallback. Protocol-version mismatch triggers a forced reinstall.',
-      'ssh.li1': '<strong>One SSH session</strong> — a ControlMaster socket carries JSON-RPC data, <code>scp</code> uploads, and <code>ssh -t</code> <code>$EDITOR</code> passthrough. One connection, one password prompt.',
-      'ssh.li2': '<strong>Hot swap</strong> — press <kbd>Ctrl</kbd>+<kbd>O</kbd> inside Reef to pick a host from <code>~/.ssh/config</code> or recent connections. The backend swaps live, no restart.',
-      'ssh.li3': '<strong>Feature parity</strong> — content search, diffs, staging, commit graph, file-tree create / rename / delete, drag-drop upload — all work the same remote.',
-
-      'keys.title': 'Keybindings',
-      'keys.lede': 'Everything you need, mapped to one hand.',
-      'keys.global': 'Global',
-      'keys.files': 'Files tab',
-      'keys.search': 'Search tab',
-      'keys.git': 'Git tab',
-      'keys.graph': 'Graph tab',
-      'keys.key': 'Key',
-      'keys.action': 'Action',
-
-      'kb.g.quit': 'quit',
-      'kb.g.tab': 'Files / Search / Git / Graph tab',
-      'kb.g.cycle': 'cycle tabs',
-      'kb.g.focus': 'switch focused panel',
-      'kb.g.help': 'help',
-      'kb.g.nav': 'navigate',
-      'kb.g.page': 'page',
-      'kb.g.hscroll': 'horizontal scroll',
-      'kb.g.find': 'vim-style find in preview / diff',
-      'kb.g.qopen': 'quick-open file (fuzzy path)',
-      'kb.g.gsearch': 'global content search overlay',
-      'kb.g.hosts': 'hosts picker (open SSH target)',
-      'kb.g.mouse': 'toggle mouse capture (terminal text selection)',
-      'kb.g.dragkey': 'drag file into terminal',
-      'kb.g.drag': 'enter place mode to copy',
-
-      'kb.f.expand': 'expand/collapse directory, or open in $EDITOR',
-      'kb.f.edit': 'open selected file in $EDITOR',
-      'kb.f.rebuild': 'rebuild tree',
-      'kb.f.rename': 'rename selected entry',
-      'kb.f.trash': 'move to trash (confirm)',
-      'kb.f.harddel': 'hard-delete (confirm)',
-      'kb.f.rclickkey': 'right-click',
-      'kb.f.rclick': 'open file-tree context menu',
-
-      'kb.s.focus': 'focus the search input',
-      'kb.s.blur': 'return to list mode',
-      'kb.s.open': 'reveal match in Files tab',
-      'kb.s.reload': 'reload current query',
-      'kb.s.wordedit': 'word-edit the prompt',
-      'kb.s.ends': 'reset / jump h-scroll',
-
-      'kb.git.stage': 'stage / unstage (file, or every file under a folder)',
-      'kb.git.discard': 'discard unstaged file / folder (confirm)',
-      'kb.git.edit': 'open selected file in $EDITOR',
-      'kb.git.refresh': 'refresh',
-      'kb.git.tree': 'tree / flat view',
-      'kb.git.mode': 'unified ↔ side-by-side',
-      'kb.git.context': 'compact ↔ full-file diff',
-
-      'kb.graph.nav': 'move commit selection',
-      'kb.graph.visual': 'enter visual mode (commit range)',
-      'kb.graph.extend': 'extend range',
-      'kb.graph.shiftext': 'extend range without entering visual',
-      'kb.graph.clear': 'exit visual / clear range',
-      'kb.graph.mode': 'commit-file diff layout / mode',
-      'kb.graph.tree': 'tree / flat changed-files',
-
-      'install.title': 'Install',
-      'install.lede': 'npm picks the right native binary. Supported: macOS (arm64, x64), Linux (arm64, x64), Windows (x64).',
-      'install.npm': 'Via npm (recommended):',
-      'install.src': 'Build from source:',
-      'install.ssh': 'Remote over SSH:',
-      'install.note': 'Reef runs anywhere. Outside a git repo, the Git and Graph tabs show a "Not a git repository" placeholder; the Files tab still browses the current directory. In a non-repo with no recent hosts, Reef opens the hosts picker so you always have a visible next step.',
-
-      'status.title': 'Status',
-      'status.lede': 'Shipping early, iterating in the open.',
-      'status.p1': 'Single-process Rust binary — no plugins, no IPC on the local path. Files, Search, Git, and Graph are host-native; remote uses a thin <code>reef-agent</code> daemon over SSH stdio.',
-      'status.p2': 'One codebase, one UI, one key map — local and remote are feature-parity. The shape of the product is settling; expect sharper edges before rough ones.',
-
-      'footer.license': 'MIT · open source'
-    },
-    zh: {
-      'nav.why': '为什么',
-      'nav.box': '功能',
-      'nav.ssh': '远程 SSH',
-      'nav.keys': '快捷键',
-      'nav.install': '安装',
-
-      'hero.eyebrow': 'reef · alpha · 终端工作台',
-      'hero.tagline': 'AI 写代码之后，IDE 九成的功能都不需要了。Reef 是剩下的一成。',
-      'hero.subtitle': 'AI 时代的最小开发者终端。本地、SSH 一视同仁。',
-
-      'why.title': '为什么做这个',
-      'why.lede': '三十秒立场。',
-      'why.p1': '当 AI 接管了大部分写代码的工作，IDE 对人真正有用的界面就剩下几样：浏览文件、查看文件、搜索、走查 git diff、把活儿交付出去。Reef 只做这些，别的都不做。',
-      'why.p2': '没有补全，没有 linter，没有 language server，连编辑器都没有。写代码用你顺手的 AI 工具；来这里只负责读、看、提交——在本地，或者远程 SSH 到哪台机器上都行。',
-
-      'box.title': '当前功能',
-      'box.lede': '四个标签、几个浮层、一个 SSH 后端，就是全部。',
-      'box.files': '文件树导航 + 只读预览——代码带语法高亮，图片内联渲染（Kitty / iTerm2 / 半块字符），二进制显示友好的元信息卡片。在文件树里直接创建、改名、移到回收站。',
-      'box.search': '工作目录内容搜索（基于 ripgrep，遵循 <code>.gitignore</code>），右栏活预览；列表 / 输入两态切换，整行水平滚动。<kbd>Space</kbd> <kbd>F</kbd> 开浮层版。',
-      'box.git': 'status 带每文件 <code>+N −M</code> 统计。按文件或按文件夹暂存 / 取消暂存（键盘或双击）。unified / side-by-side diff，compact / full-file 上下文，语法高亮。带确认的单条或一次性全部还原。带确认横条的推送 / 强制推送（<code>--force-with-lease</code>）。',
-      'box.graph': 'commit 图（DAG）+ 引用标签 + lane 渲染。选中一条提交看内联详情与单文件 diff；按 <kbd>V</kbd> 进 vim 风格 visual 模式——选一段 commit，看整段合并后的 diff。',
-      'box.li0': '<strong>浮层</strong>：<kbd>Space</kbd> <kbd>P</kbd> 按模糊路径快速打开文件；<kbd>Space</kbd> <kbd>F</kbd> 开全局内容搜索（跟 Search 标签共用后端，<kbd>Alt</kbd>+<kbd>Enter</kbd> 把查询 pin 到标签里）；<kbd>Ctrl</kbd>+<kbd>O</kbd> 打开 SSH hosts 选择器。',
-      'box.li1': '<strong>拖拽复制文件</strong>——把文件拖进终端进入 place 模式，点一个目录就复制过去。SSH 下走已有的 ControlMaster 上传。',
-      'box.li2': '<strong>文本选择 → 系统剪贴板</strong>——在预览里拖选，Reef 通过 OSC 52 写进剪贴板（无需辅助二进制，SSH 下也行）。按 <kbd>v</kbd> 关掉鼠标捕获则交给终端原生选择。',
-      'box.li3': '<strong>键盘优先</strong>，鼠标只在值得的地方出现——拖分隔条、双击切换暂存、在光标下的面板滚动、右键文件树弹菜单。',
-      'box.li4': '<strong>自动一切</strong>——OSC 11 判主题明暗，系统 locale 选中英文，diff 布局 + 最近主机跨会话保留。',
-
-      'ssh.title': '远程 SSH',
-      'ssh.lede': 'VSCode Remote SSH，但没有 IDE。',
-      'ssh.p1': '让 Reef 指向一台远程机器，拿到完整的 Files / Search / Git / Graph UI——同一套键位，同一套功能，都通过 SSH stdio 驱动。远端跑一个小小的 <code>reef-agent</code> 守护进程，Reef 会自动装好版本匹配的那一份。',
-      'ssh.li0': '<strong>自动部署</strong>——嗅探远端 OS/arch，优先从 GitHub Releases 下载匹配 agent，拉不到就从本地 build 上传。协议版本不匹配会触发强制重装。',
-      'ssh.li1': '<strong>一条 SSH 会话</strong>——ControlMaster socket 走 JSON-RPC 数据、<code>scp</code> 上传、<code>ssh -t</code> <code>$EDITOR</code> 透传。一次连接，一次密码。',
-      'ssh.li2': '<strong>热切换</strong>——在 Reef 里按 <kbd>Ctrl</kbd>+<kbd>O</kbd> 从 <code>~/.ssh/config</code> 或最近连接里挑一个主机，后端即时切换，不用重启。',
-      'ssh.li3': '<strong>功能等效</strong>——内容搜索、diff、暂存、commit 图、文件树创建 / 改名 / 删除、拖拽上传——远程和本地一模一样。',
-
-      'keys.title': '快捷键',
-      'keys.lede': '所有你要的，单手覆盖。',
-      'keys.global': '全局',
-      'keys.files': 'Files 标签',
-      'keys.search': 'Search 标签',
-      'keys.git': 'Git 标签',
-      'keys.graph': 'Graph 标签',
-      'keys.key': '按键',
-      'keys.action': '功能',
-
-      'kb.g.quit': '退出',
-      'kb.g.tab': '切到 Files / Search / Git / Graph 标签',
-      'kb.g.cycle': '循环切换标签',
-      'kb.g.focus': '切换聚焦的面板',
-      'kb.g.help': '帮助',
-      'kb.g.nav': '导航',
-      'kb.g.page': '翻页',
-      'kb.g.hscroll': '水平滚动',
-      'kb.g.find': '预览 / diff 里的 vim 风格查找',
-      'kb.g.qopen': '按模糊路径快速打开文件',
-      'kb.g.gsearch': '全局内容搜索浮层',
-      'kb.g.hosts': 'hosts 选择器（打开 SSH 连接）',
-      'kb.g.mouse': '关/开鼠标捕获（让终端原生选择文本）',
-      'kb.g.dragkey': '拖文件进终端',
-      'kb.g.drag': '进入 place 模式复制',
-
-      'kb.f.expand': '展开 / 折叠目录，或用 $EDITOR 打开',
-      'kb.f.edit': '用 $EDITOR 打开选中文件',
-      'kb.f.rebuild': '重建文件树',
-      'kb.f.rename': '重命名选中项',
-      'kb.f.trash': '移到回收站（需确认）',
-      'kb.f.harddel': '硬删除（需确认）',
-      'kb.f.rclickkey': '右键',
-      'kb.f.rclick': '打开文件树右键菜单',
-
-      'kb.s.focus': '聚焦搜索输入',
-      'kb.s.blur': '退回列表模式',
-      'kb.s.open': '切到 Files 标签并定位到文件',
-      'kb.s.reload': '重跑当前查询',
-      'kb.s.wordedit': '提示符里的词级编辑',
-      'kb.s.ends': '重置 / 跳到末尾',
-
-      'kb.git.stage': '暂存 / 取消暂存（文件或文件夹下全部）',
-      'kb.git.discard': '还原未暂存的文件 / 文件夹（需确认）',
-      'kb.git.edit': '用 $EDITOR 打开选中文件',
-      'kb.git.refresh': '刷新',
-      'kb.git.tree': '树形 / 扁平 切换',
-      'kb.git.mode': 'unified / side-by-side',
-      'kb.git.context': 'compact / full-file',
-
-      'kb.graph.nav': '移动选中的 commit',
-      'kb.graph.visual': '进入 visual 模式（选一段 commit）',
-      'kb.graph.extend': '扩展区间',
-      'kb.graph.shiftext': '不进 visual 模式直接扩选',
-      'kb.graph.clear': '退出 visual / 清空区间',
-      'kb.graph.mode': 'commit 文件 diff 的布局 / 模式',
-      'kb.graph.tree': '树形 / 扁平 显示变更文件',
-
-      'install.title': '安装',
-      'install.lede': 'npm 会自动选择当前平台对应的原生二进制。支持：macOS (arm64, x64)、Linux (arm64, x64)、Windows (x64)。',
-      'install.npm': '通过 npm（推荐）：',
-      'install.src': '从源码构建：',
-      'install.ssh': '远程 SSH：',
-      'install.note': 'Reef 在任何目录都能启动。不在 git 仓库里时，Git 和 Graph 标签显示 "Not a git repository" 占位，Files 标签仍然可以浏览当前目录。在非仓库且没有历史主机时，Reef 会自动弹出 hosts 选择器，让你始终有个可见的下一步。',
-
-      'status.title': '当前状态',
-      'status.lede': '早期发布，公开迭代。',
-      'status.p1': '单进程 Rust 二进制——本地路径没有插件、没有 IPC。Files、Search、Git、Graph 都是 host 原生；远程靠一个很薄的 <code>reef-agent</code> 守护进程通过 SSH stdio 驱动。',
-      'status.p2': '一套代码、一个 UI、一套键位——本地和远程的功能一致。产品形态正在定型，还会先磨利再磨光。',
-
-      'footer.license': 'MIT · 开源'
-    }
-  };
-
-  (function() {
-    const toggle = document.getElementById('langToggle');
-    const html = document.documentElement;
-
-    function apply(lang) {
-      const dict = I18N[lang] || I18N.en;
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const k = el.getAttribute('data-i18n');
-        if (dict[k] != null) el.innerHTML = dict[k];
-      });
-      html.setAttribute('lang', lang === 'zh' ? 'zh-CN' : 'en');
-      html.setAttribute('data-lang', lang);
-      toggle.textContent = lang === 'en' ? 'EN' : '中文';
-      document.title = lang === 'zh'
-        ? 'Reef — AI 时代的最小开发者终端'
-        : 'Reef — the minimal dev terminal for the AI coding era';
-      try { localStorage.setItem('reef-lang', lang); } catch(e) {}
-    }
-
-    let initial = 'en';
-    try {
-      const saved = localStorage.getItem('reef-lang');
-      if (saved === 'zh' || saved === 'en') initial = saved;
-    } catch(e) {}
-    if (initial !== 'en') apply(initial);
-
-    toggle.addEventListener('click', () => {
-      const cur = html.getAttribute('data-lang') || 'en';
-      apply(cur === 'en' ? 'zh' : 'en');
-    });
-  })();
-
-  // ── interactive TUI demo ──────────────────────────
-  (function() {
-    const tui = document.getElementById('tuiBody');
-    if (!tui) return;
-    const tuiWrap = tui.closest('.tui');
-    const tabsEl  = document.getElementById('tuiTabs');
-    const leftEl  = document.getElementById('tuiLeft');
-    const rightEl = document.getElementById('tuiRight');
-    const hintsEl = document.getElementById('tuiHints');
-
-    const PREVIEWS = {
-      'README.md': [
-        '# Reef',
-        '',
-        '> **AI 时代的最小开发者终端**',
-        '> **The minimal dev terminal for the AI coding era**',
-        '',
-        '**Once AI writes your code,',
-        '90% of an IDE becomes dead weight.',
-        'Reef is the other 10%.**',
-      ],
-      'Cargo.toml': [
-        '[workspace]',
-        'members = [',
-        '    "crates/test-support",',
-        ']',
-        'resolver = "2"',
-        '',
-        '[package]',
-        'name    = "reef"',
-        'version = "0.1.0"',
-      ],
-      'app.rs': [
-        'pub enum Tab {',
-        '    Files,',
-        '    Git,',
-        '    Graph,',
-        '}',
-        '',
-        'impl Tab {',
-        '    pub const ALL: &\'static [Tab] =',
-        '        &[Tab::Files, Tab::Git, Tab::Graph];',
-        '}',
-      ],
-      'main.rs': [
-        'fn handle_key_graph(key: KeyEvent, app: &mut App) {',
-        '    match key.code {',
-        '        KeyCode::Up   | KeyCode::Char(\'k\') => { … }',
-        '        KeyCode::Down | KeyCode::Char(\'j\') => { … }',
-        '        KeyCode::Enter => open_commit_detail(app),',
-        '        _ => {}',
-        '    }',
-        '}',
-      ],
-      'graph.rs': [
-        'use crate::git::CommitInfo;',
-        '',
-        '#[derive(Debug, Clone, Copy, PartialEq, Eq)]',
-        'pub enum LaneCell {',
-        '    Empty,',
-        '    Pass,',
-        '    Node,',
-        '    Merge { from: usize },',
-        '    Fork  { to:   usize },',
-        '}',
-      ],
-    };
-
-    const TREE = {
-      name: 'reef', isDir: true, expanded: true, children: [
-        { name: 'src/', isDir: true, expanded: true, children: [
-          { name: 'main.rs', isDir: false, preview: 'main.rs' },
-          { name: 'app.rs',  isDir: false, preview: 'app.rs'  },
-          { name: 'git/', isDir: true, expanded: true, children: [
-            { name: 'graph.rs', isDir: false, preview: 'graph.rs' },
-            { name: 'mod.rs',   isDir: false, preview: 'graph.rs' },
-          ]},
-          { name: 'ui/', isDir: true, expanded: false, children: [
-            { name: 'mod.rs', isDir: false, preview: 'main.rs' },
-          ]},
-        ]},
-        { name: 'crates/', isDir: true, expanded: false, children: [
-          { name: 'test-support/', isDir: true, expanded: false, children: [] },
-        ]},
-        { name: 'tests/',  isDir: true, expanded: false, children: [] },
-        { name: 'benches/',isDir: true, expanded: false, children: [] },
-        { name: 'README.md',  isDir: false, preview: 'README.md'  },
-        { name: 'Cargo.toml', isDir: false, preview: 'Cargo.toml' },
-      ]
-    };
-
-    const gitItems = [
-      { path: 'src/ui.rs',        status: 'M', staged: true  },
-      { path: 'src/app.rs',       status: 'A', staged: true  },
-      { path: 'src/git/graph.rs', status: 'M', staged: false },
-      { path: 'old/scratch.md',   status: 'D', staged: false },
-    ];
-
-    const diffData = {
-      'src/ui.rs': [{ header: '@@ -42,7 +42,9 @@', rows: [
-        { t: ' ', ln: 42, code: 'fn render(&self, f: &mut Frame) {' },
-        { t: ' ', ln: 43, code: '    let chunks = layout(f.size());' },
-        { t: ' ', ln: 44, code: '    self.tabs.render(chunks[0], f);' },
-        { t: '-', ln: 45, code: '    self.panel.render(chunks[1], f);' },
-        { t: '+', ln: 45, code: '    let focus = self.focus;' },
-        { t: '+', ln: 46, code: '    self.panel.render(chunks[1], f, focus);' },
-        { t: '+', ln: 47, code: '    self.statusbar.render(chunks[2], f);' },
-        { t: ' ', ln: 48, code: '}' },
-      ]}],
-      'src/app.rs': [{ header: '@@ -0,0 +1,10 @@', rows: [
-        { t: '+', ln: 1,  code: 'pub enum Tab {' },
-        { t: '+', ln: 2,  code: '    Files,' },
-        { t: '+', ln: 3,  code: '    Git,' },
-        { t: '+', ln: 4,  code: '    Graph,' },
-        { t: '+', ln: 5,  code: '}' },
-        { t: '+', ln: 6,  code: '' },
-        { t: '+', ln: 7,  code: 'impl Tab {' },
-        { t: '+', ln: 8,  code: '    pub const ALL: &\'static [Tab] =' },
-        { t: '+', ln: 9,  code: '        &[Tab::Files, Tab::Git, Tab::Graph];' },
-        { t: '+', ln: 10, code: '}' },
-      ]}],
-      'src/git/graph.rs': [{ header: '@@ -24,6 +24,7 @@', rows: [
-        { t: ' ', ln: 24, code: '    Node,' },
-        { t: ' ', ln: 25, code: '    Merge { from: usize },' },
-        { t: '+', ln: 26, code: '    Fork  { to:   usize },' },
-        { t: ' ', ln: 27, code: '}' },
-      ]}],
-      'old/scratch.md': [{ header: '@@ -1,3 +0,0 @@', rows: [
-        { t: '-', ln: 1, code: '# temporary notes' },
-        { t: '-', ln: 2, code: '' },
-        { t: '-', ln: 3, code: 'tbd.' },
-      ]}],
-    };
-
-    const commits = [
-      { oid: 'a3b1c7f', msg: 'feat(graph): tab with commit detail panel',       author: 'pan', date: '2d', lane: '● ',  body: 'Add the Graph tab. Panel::Diff renders git.commitDetail\nwhen a commit is selected in git.graph.', files: [
-        { sig: 'M', path: 'src/app.rs' },
-        { sig: 'M', path: 'src/ui/mod.rs' },
-      ]},
-      { oid: '034c2bb', msg: 'ci(security): unblock cargo-deny and cargo-audit', author: 'pan', date: '3d', lane: '● ',  body: 'Pin versions and allow known-safe advisories.', files: [
-        { sig: 'M', path: 'deny.toml' },
-        { sig: 'M', path: '.github/workflows/security.yml' },
-      ]},
-      { oid: '9f2a40e', msg: 'feat(git): force-push with --force-with-lease',    author: 'pan', date: '4d', lane: '● ',  body: 'Add confirm banner before push; reject --force\nin favor of --force-with-lease.', files: [
-        { sig: 'M', path: 'src/git/push.rs' },
-      ]},
-      { oid: '5e8b12d', msg: "merge branch 'feature/graph'",                     author: 'pan', date: '5d', lane: '●╮',  body: 'Merge commit: two-parent node joining feature branch.', files: [] },
-      { oid: '8ac5e0f', msg: 'feat(git): discard unstaged file with confirm',    author: 'pan', date: '6d', lane: '│●',  body: 'Two-step d → y: never clobber uncommitted work on a single keystroke.', files: [
-        { sig: 'M', path: 'src/git/ops.rs' },
-      ]},
-      { oid: '21d0f7a', msg: 'feat(git): graph lane tracker',                    author: 'pan', date: '7d', lane: '│●',  body: 'Incremental lane allocation with Node/Pass/Merge/Fork.', files: [
-        { sig: 'A', path: 'src/git/graph.rs' },
-      ]},
-      { oid: '1f2a3b0', msg: 'test(git): property tests for build_graph',       author: 'pan', date: '8d', lane: '│╱',  body: 'Random DAGs: every commit appears exactly once.', files: [
-        { sig: 'A', path: 'tests/graph_properties.rs' },
-      ]},
-      { oid: '9d7c441', msg: 'refactor: collapse plugin subprocess into host',   author: 'pan', date: '9d', lane: '● ',  body: 'Remove JSON-RPC plugin layer. Single binary, no IPC.', files: [
-        { sig: 'D', path: 'crates/reef-protocol/' },
-        { sig: 'M', path: 'src/app.rs' },
-      ]},
-    ];
-
-    // Static search scene — hand-rolled so the demo can show the Search tab
-    // without wiring up a real query engine. The "query" is baked in.
-    const searchHits = [
-      { path: 'src/app.rs',  line: 42,  text: 'fn main() { let x = foo(); }',      mRange: [24, 27] },
-      { path: 'src/app.rs',  line: 128, text: '    self.foo_count += 1;',            mRange: [9, 12] },
-      { path: 'src/app.rs',  line: 312, text: '    let _ = foo();',                  mRange: [12, 15] },
-      { path: 'src/lib.rs',  line: 12,  text: 'use foo::*;',                         mRange: [4, 7]  },
-      { path: 'README.md',   line: 8,   text: '- foo is here',                       mRange: [2, 5]  },
-    ];
-
-    const state = {
-      tab: 'git', panel: 'left', focused: false,
-      files:  { sel: 0 },
-      search: { sel: 0 },
-      git:    { sel: 0, mode: 'unified' },
-      graph:  { sel: 0 },
-    };
-
-    const LABELS = {
-      en: {
-        focusHint: 'click to interact',
-        tabFiles: 'Files', tabSearch: 'Search', tabGit: 'Git', tabGraph: 'Graph',
-        nav: 'nav', expand: 'expand/collapse', panel: 'switch panel', open: 'open',
-        stage: 'stage', unstage: 'unstage', mode: 'unified↔split',
-        focus: 'focus input',
-        tabs: 'switch tab',
-        staged: 'staged', unstaged: 'unstaged', modified: 'modified', commits: 'commits',
-        hits: 'hits',
-        brand: 'reef · alpha',
-        directory: 'directory', preview: 'preview',
-        entries: (n) => n + (n === 1 ? ' entry' : ' entries'),
-        pressExpand: (exp) => 'press Enter to ' + (exp ? 'collapse' : 'expand'),
-        changedFiles: (n) => 'Changed files (' + n + ')',
-        sectionStaged: (n) => 'staged (' + n + ')',
-        sectionUnstaged: (n) => 'unstaged (' + n + ')',
-      },
-      zh: {
-        focusHint: '点击交互',
-        tabFiles: '文件', tabSearch: '搜索', tabGit: 'Git', tabGraph: '图谱',
-        nav: '导航', expand: '展开 / 折叠', panel: '切换面板', open: '打开',
-        stage: '暂存', unstage: '取消暂存', mode: 'unified↔split',
-        focus: '聚焦输入',
-        tabs: '切换标签',
-        staged: '已暂存', unstaged: '未暂存', modified: '已修改', commits: '提交',
-        hits: '条命中',
-        brand: 'reef · alpha',
-        directory: '目录', preview: '预览',
-        entries: (n) => n + ' 项',
-        pressExpand: (exp) => '按 Enter ' + (exp ? '折叠' : '展开'),
-        changedFiles: (n) => '修改的文件 (' + n + ')',
-        sectionStaged: (n) => '已暂存 (' + n + ')',
-        sectionUnstaged: (n) => '未暂存 (' + n + ')',
-      }
-    };
-    const curLang = () => document.documentElement.getAttribute('data-lang') === 'zh' ? 'zh' : 'en';
-    const L = () => LABELS[curLang()];
-
-    const esc = (s) => String(s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    function flatten(node, out, depth, path) {
-      out = out || []; depth = depth || 0; path = path || '';
-      if (!node.children) return out;
-      for (const child of node.children) {
-        const childPath = path ? path + '/' + child.name : child.name;
-        out.push({ node: child, depth: depth, path: childPath });
-        if (child.isDir && child.expanded) flatten(child, out, depth + 1, childPath);
-      }
-      return out;
-    }
-    let filesVisible = flatten(TREE);
-
-    function rebuildTree() {
-      filesVisible = flatten(TREE);
-      if (state.files.sel >= filesVisible.length) state.files.sel = filesVisible.length - 1;
-      if (state.files.sel < 0) state.files.sel = 0;
-    }
-
-    function orderedGit() {
-      return [...gitItems.filter(x => x.staged), ...gitItems.filter(x => !x.staged)];
-    }
-
-    function renderTabs() {
-      tabsEl.innerHTML = '';
-      const lab = L();
-      const defs = [
-        { id: 'files',  label: lab.tabFiles,  key: '1' },
-        { id: 'search', label: lab.tabSearch, key: '2' },
-        { id: 'git',    label: lab.tabGit,    key: '3' },
-        { id: 'graph',  label: lab.tabGraph,  key: '4' },
-      ];
-      defs.forEach(t => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'tab' + (t.id === state.tab ? ' active' : ' on');
-        btn.setAttribute('data-tab', t.id);
-        btn.innerHTML = '<span class="kbd">' + t.key + '</span> ' + t.label;
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          state.tab = t.id; state.panel = 'left';
-          tui.focus(); renderAll();
-        });
-        tabsEl.appendChild(btn);
-      });
-      const spacer = document.createElement('span');
-      spacer.className = 'spacer';
-      tabsEl.appendChild(spacer);
-      const branch = document.createElement('span');
-      branch.className = 'branch';
-      branch.innerHTML = '<span class="dot-coral">●</span> main <span class="meta">↑2 ↓0</span>';
-      tabsEl.appendChild(branch);
-    }
-
-    function renderFilesLeft() {
-      leftEl.innerHTML = '';
-      filesVisible.forEach((entry, i) => {
-        const { node, depth } = entry;
-        const sel = (i === state.files.sel);
-        const row = document.createElement('div');
-        row.className = 'tui-row indent-' + Math.min(depth, 4) +
-                        (sel ? ' selected' : '') +
-                        (node.isDir ? '' : ' dim');
-        const marker = node.isDir ? (node.expanded ? '▾' : '▸') : ' ';
-        const markerCls = (sel && node.isDir) ? 'marker coral' : 'marker';
-        row.innerHTML = '<span class="' + markerCls + '">' + marker + '</span>' + esc(node.name);
-        row.addEventListener('click', () => {
-          state.files.sel = i;
-          if (node.isDir) {
-            node.expanded = !node.expanded;
-            rebuildTree();
-            const ni = filesVisible.findIndex(e => e.node === node);
-            if (ni >= 0) state.files.sel = ni;
-          }
-          tui.focus(); renderAll();
-        });
-        leftEl.appendChild(row);
-      });
-    }
-
-    function renderFilesRight() {
-      rightEl.innerHTML = '';
-      const entry = filesVisible[state.files.sel];
-      if (!entry) { rightEl.innerHTML = '<div class="tui-empty">—</div>'; return; }
-      const { node, path } = entry;
-      const lab = L();
-      const head = document.createElement('div');
-      head.className = 'tui-view-head';
-      head.innerHTML = '<span>' + esc(path) + '</span><span class="hunk">' + (node.isDir ? lab.directory : lab.preview) + '</span>';
-      rightEl.appendChild(head);
-      if (node.isDir) {
-        const n = (node.children || []).length;
-        const e = document.createElement('div');
-        e.className = 'tui-empty';
-        e.textContent = lab.entries(n) + ' · ' + lab.pressExpand(node.expanded);
-        rightEl.appendChild(e);
-        return;
-      }
-      const lines = PREVIEWS[node.preview || node.name] || ['(no preview)'];
-      lines.forEach((line, i) => {
-        const r = document.createElement('div');
-        r.className = 'tui-preview-row';
-        r.innerHTML = '<span class="ln">' + (i + 1) + '</span>' +
-                      '<span class="code">' + esc(line) + '</span>';
-        rightEl.appendChild(r);
-      });
-    }
-
-    function renderGitLeft() {
-      leftEl.innerHTML = '';
-      const staged = gitItems.filter(x => x.staged);
-      const unstaged = gitItems.filter(x => !x.staged);
-      const ordered = orderedGit();
-      const sign = (s) => {
-        const cls = s === 'A' ? 'add' : s === 'D' ? 'del' : s === 'M' ? 'mod' : 'untracked';
-        return '<span class="status-sign ' + cls + '">' + s + '</span>';
-      };
-      const appendSection = (title, list) => {
-        const h = document.createElement('div');
-        h.className = 'tui-section-head';
-        h.textContent = title;
-        leftEl.appendChild(h);
-        list.forEach(it => {
-          const idx = ordered.indexOf(it);
-          const sel = (idx === state.git.sel);
-          const row = document.createElement('div');
-          row.className = 'tui-row' + (sel ? ' selected' : '');
-          row.innerHTML = sign(it.status) + '<span>' + esc(it.path) + '</span>';
-          row.addEventListener('click', () => { state.git.sel = idx; tui.focus(); renderAll(); });
-          leftEl.appendChild(row);
-        });
-      };
-      const lab = L();
-      appendSection(lab.sectionStaged(staged.length), staged);
-      appendSection(lab.sectionUnstaged(unstaged.length), unstaged);
-    }
-
-    function renderGitRight() {
-      rightEl.innerHTML = '';
-      const ordered = orderedGit();
-      const item = ordered[state.git.sel];
-      if (!item) { rightEl.innerHTML = '<div class="tui-empty">—</div>'; return; }
-      const firstHunk = (diffData[item.path] || [])[0];
-      const head = document.createElement('div');
-      head.className = 'tui-view-head';
-      const lab = L();
-      head.innerHTML =
-        '<span>' + esc(item.path) +
-        ' <span class="dim">· ' + (item.staged ? lab.staged : lab.unstaged) +
-        ' · ' + state.git.mode + '</span></span>' +
-        (firstHunk ? '<span class="hunk">' + esc(firstHunk.header) + '</span>' : '');
-      rightEl.appendChild(head);
-
-      const wrap = document.createElement('div');
-      wrap.className = 'tui-diff' + (state.git.mode === 'split' ? ' split' : '');
-      const hunks = diffData[item.path] || [];
-      if (state.git.mode === 'unified') {
-        hunks.forEach(h => h.rows.forEach(r => {
-          const cls = r.t === '+' ? ' add' : r.t === '-' ? ' del' : '';
-          const row = document.createElement('div');
-          row.className = 'tui-diff-row' + cls;
-          row.innerHTML =
-            '<span class="sign">' + (r.t === ' ' ? '' : r.t) + '</span>' +
-            '<span class="ln">' + r.ln + '</span>' +
-            '<span class="code">' + esc(r.code) + '</span>';
-          wrap.appendChild(row);
-        }));
-      } else {
-        hunks.forEach(h => {
-          let i = 0;
-          while (i < h.rows.length) {
-            const r = h.rows[i];
-            const row = document.createElement('div');
-            if (r.t === ' ') {
-              row.className = 'tui-diff-row';
-              row.innerHTML =
-                '<span class="ln left">' + r.ln + '</span>' +
-                '<span class="code left">' + esc(r.code) + '</span>' +
-                '<span class="divider"></span>' +
-                '<span class="ln right">' + r.ln + '</span>' +
-                '<span class="code right">' + esc(r.code) + '</span>';
-              i++;
-            } else if (r.t === '-' && h.rows[i+1] && h.rows[i+1].t === '+') {
-              const b = h.rows[i+1];
-              row.className = 'tui-diff-row chg';
-              row.innerHTML =
-                '<span class="ln left">' + r.ln + '</span>' +
-                '<span class="code left">' + esc(r.code) + '</span>' +
-                '<span class="divider"></span>' +
-                '<span class="ln right">' + b.ln + '</span>' +
-                '<span class="code right">' + esc(b.code) + '</span>';
-              i += 2;
-            } else if (r.t === '-') {
-              row.className = 'tui-diff-row del';
-              row.innerHTML =
-                '<span class="ln left">' + r.ln + '</span>' +
-                '<span class="code left">' + esc(r.code) + '</span>' +
-                '<span class="divider"></span>' +
-                '<span class="ln right"></span>' +
-                '<span class="code right"></span>';
-              i++;
-            } else {
-              row.className = 'tui-diff-row add';
-              row.innerHTML =
-                '<span class="ln left"></span>' +
-                '<span class="code left"></span>' +
-                '<span class="divider"></span>' +
-                '<span class="ln right">' + r.ln + '</span>' +
-                '<span class="code right">' + esc(r.code) + '</span>';
-              i++;
-            }
-            wrap.appendChild(row);
-          }
-        });
-      }
-      rightEl.appendChild(wrap);
-    }
-
-    function renderGraphLeft() {
-      leftEl.innerHTML = '';
-      commits.forEach((c, i) => {
-        const sel = (i === state.graph.sel);
-        const row = document.createElement('div');
-        row.className = 'tui-row' + (sel ? ' selected' : '');
-        row.innerHTML =
-          '<span class="graph-col">' + esc(c.lane) + '</span>' +
-          '<span class="commit-oid">' + esc(c.oid) + '</span>' +
-          '<span class="commit-msg">' + esc(c.msg) + '</span>' +
-          '<span class="commit-meta">' + esc(c.date) + '</span>';
-        row.addEventListener('click', () => { state.graph.sel = i; tui.focus(); renderAll(); });
-        leftEl.appendChild(row);
-      });
-    }
-
-    function renderGraphRight() {
-      rightEl.innerHTML = '';
-      const c = commits[state.graph.sel];
-      if (!c) { rightEl.innerHTML = '<div class="tui-empty">—</div>'; return; }
-      const wrap = document.createElement('div');
-      wrap.className = 'tui-commit';
-      const fileSig = (s) => s === 'A' ? 'add' : s === 'D' ? 'del' : 'mod';
-      wrap.innerHTML =
-        '<h4>' + esc(c.msg) + '</h4>' +
-        '<div class="meta"><code>' + esc(c.oid) + '</code> · ' + esc(c.author) + ' · ' + esc(c.date) + '</div>' +
-        '<div class="body">' + esc(c.body || '') + '</div>' +
-        (c.files && c.files.length
-          ? '<div class="files"><div class="files-head">' + L().changedFiles(c.files.length) + '</div>' +
-            c.files.map(f => '<div class="file"><span class="sig ' + fileSig(f.sig) + '">' + f.sig + '</span><span>' + esc(f.path) + '</span></div>').join('') +
-            '</div>'
-          : '');
-      rightEl.appendChild(wrap);
-    }
-
-    function renderHints() {
-      hintsEl.innerHTML = '';
-      const lab = L();
-      const items = [];
-      if (state.tab === 'files')       items.push(['j/k', lab.nav], ['Enter', lab.expand], ['Tab', lab.panel]);
-      else if (state.tab === 'search') items.push(['j/k', lab.nav], ['/', lab.focus], ['Enter', lab.open]);
-      else if (state.tab === 'git')    items.push(['s', lab.stage], ['u', lab.unstage], ['m', lab.mode], ['j/k', lab.nav]);
-      else                             items.push(['j/k', lab.nav], ['Enter', lab.open], ['Tab', lab.panel]);
-      items.push(['1/2/3/4', lab.tabs]);
-      items.forEach(([k, label]) => {
-        const s = document.createElement('span');
-        s.innerHTML = '<span class="key">[' + k + ']</span> ' + label;
-        hintsEl.appendChild(s);
-      });
-      const status = document.createElement('span');
-      status.className = 'status';
-      if (state.tab === 'git') {
-        const st = gitItems.filter(x => x.staged).length;
-        const md = gitItems.filter(x => !x.staged).length;
-        status.textContent = st + ' ' + lab.staged + ' · ' + md + ' ' + lab.modified;
-      } else if (state.tab === 'graph') {
-        status.textContent = commits.length + ' ' + lab.commits + ' · main';
-      } else if (state.tab === 'search') {
-        status.textContent = searchHits.length + ' ' + lab.hits + ' · foo';
-      } else {
-        status.textContent = lab.brand;
-      }
-      hintsEl.appendChild(status);
-    }
-
-    function renderPanels() {
-      leftEl.classList.toggle('focused-panel', state.panel === 'left');
-      rightEl.classList.toggle('focused-panel', state.panel === 'right');
-      if (state.tab === 'files')  { renderFilesLeft();  renderFilesRight();  }
-      if (state.tab === 'search') { renderSearchLeft(); renderSearchRight(); }
-      if (state.tab === 'git')    { renderGitLeft();    renderGitRight();    }
-      if (state.tab === 'graph')  { renderGraphLeft();  renderGraphRight();  }
-    }
-
-    // Static Search scene. Left = prompt + results; right = preview of the
-    // selected hit's file with the matched line highlighted. No live query
-    // — the marketing page mocks what the real tab looks like, not how it
-    // computes.
-    function renderSearchLeft() {
-      leftEl.innerHTML = '';
-      // Prompt row
-      const prompt = document.createElement('div');
-      prompt.className = 'tui-row';
-      prompt.innerHTML = '<span style="color: var(--accent); font-weight: 600;">&gt; </span>foo';
-      leftEl.appendChild(prompt);
-      // Separator
-      const sep = document.createElement('div');
-      sep.className = 'row-sep';
-      leftEl.appendChild(sep);
-      // Results
-      searchHits.forEach((hit, i) => {
-        const sel = (i === state.search.sel);
-        const row = document.createElement('div');
-        row.className = 'tui-row' + (sel ? ' selected' : '');
-        const pathSpan = esc(hit.path + ':' + hit.line);
-        const pre  = esc(hit.text.slice(0, hit.mRange[0]));
-        const mid  = esc(hit.text.slice(hit.mRange[0], hit.mRange[1]));
-        const post = esc(hit.text.slice(hit.mRange[1]));
-        row.innerHTML =
-          '<span class="key" style="min-width: 140px; display: inline-block;">' + pathSpan + '</span>' +
-          '<span style="color: var(--fg-dim);"> │ </span>' +
-          pre + '<mark>' + mid + '</mark>' + post;
-        row.addEventListener('click', () => {
-          state.search.sel = i;
-          tui.focus(); renderAll();
-        });
-        leftEl.appendChild(row);
-      });
-    }
-
-    function renderSearchRight() {
-      rightEl.innerHTML = '';
-      const hit = searchHits[state.search.sel];
-      if (!hit) { rightEl.innerHTML = '<div class="tui-empty">—</div>'; return; }
-      const lab = L();
-      const head = document.createElement('div');
-      head.className = 'tui-view-head';
-      head.textContent = hit.path;
-      rightEl.appendChild(head);
-      // Fake preview — 12 lines of plausible content, with the matched line
-      // swapped in at hit.line (bounded to the visible range).
-      const targetRow = Math.min(hit.line, 10);
-      const template = [
-        '//! Entry point.',
-        '',
-        'use crate::state::App;',
-        'use crate::ui;',
-        '',
-        'pub fn run() -> anyhow::Result<()> {',
-        '    let mut app = App::new()?;',
-        '    while !app.should_quit {',
-        '        ui::render(&mut app)?;',
-        '        app.tick();',
-        '    }',
-        '    Ok(())',
-        '}',
-      ];
-      template[targetRow - 1] = hit.text;
-      template.forEach((line, i) => {
-        const lineno = i + 1;
-        const row = document.createElement('div');
-        row.className = 'tui-row' + (lineno === targetRow ? ' selected' : '');
-        row.innerHTML =
-          '<span style="color: var(--fg-dim); display: inline-block; width: 32px; text-align: right; padding-right: 8px;">' +
-          lineno + '</span>' + esc(line);
-        rightEl.appendChild(row);
-      });
-    }
-
-    function renderAll() {
-      const hint = document.getElementById('tuiFocusHint');
-      if (hint) hint.textContent = L().focusHint;
-      renderTabs();
-      renderPanels();
-      renderHints();
-      const panel = state.panel === 'left' ? leftEl : rightEl;
-      const sel = panel.querySelector('.tui-row.selected');
-      if (sel && typeof sel.scrollIntoView === 'function') {
-        sel.scrollIntoView({ block: 'nearest' });
-      }
-    }
-
-    function nav(dir) {
-      if (state.tab === 'files') {
-        const n = filesVisible.length;
-        state.files.sel = (state.files.sel + dir + n) % n;
-      } else if (state.tab === 'search') {
-        const n = searchHits.length;
-        state.search.sel = (state.search.sel + dir + n) % n;
-      } else if (state.tab === 'git') {
-        const n = gitItems.length;
-        state.git.sel = (state.git.sel + dir + n) % n;
-      } else {
-        const n = commits.length;
-        state.graph.sel = (state.graph.sel + dir + n) % n;
-      }
-    }
-
-    function onKey(e) {
-      if (!state.focused) return;
-      const k = e.key;
-
-      if (k === '1' || k === '2' || k === '3' || k === '4') {
-        state.tab = k === '1' ? 'files' : k === '2' ? 'search' : k === '3' ? 'git' : 'graph';
-        state.panel = 'left';
-        e.preventDefault(); renderAll(); return;
-      }
-      if (k === 'Tab') {
-        state.panel = state.panel === 'left' ? 'right' : 'left';
-        e.preventDefault(); renderAll(); return;
-      }
-      if (k === 'ArrowDown' || k === 'j') {
-        if (state.panel === 'left') { nav(1); renderAll(); }
-        else { rightEl.scrollTop += 28; }
-        e.preventDefault(); return;
-      }
-      if (k === 'ArrowUp' || k === 'k') {
-        if (state.panel === 'left') { nav(-1); renderAll(); }
-        else { rightEl.scrollTop -= 28; }
-        e.preventDefault(); return;
-      }
-      if (k === 'Enter') {
-        if (state.tab === 'files' && state.panel === 'left') {
-          const entry = filesVisible[state.files.sel];
-          if (entry && entry.node.isDir) {
-            entry.node.expanded = !entry.node.expanded;
-            rebuildTree();
-            const ni = filesVisible.findIndex(e2 => e2.node === entry.node);
-            if (ni >= 0) state.files.sel = ni;
-            e.preventDefault(); renderAll(); return;
-          }
-        }
-        if (state.panel === 'left') {
-          state.panel = 'right';
-          e.preventDefault(); renderAll(); return;
-        }
-      }
-      if (state.tab === 'git') {
-        const ordered = orderedGit();
-        if (k === 's') {
-          const it = ordered[state.git.sel];
-          if (it && !it.staged) {
-            it.staged = true;
-            state.git.sel = orderedGit().indexOf(it);
-          }
-          e.preventDefault(); renderAll(); return;
-        }
-        if (k === 'u') {
-          const it = ordered[state.git.sel];
-          if (it && it.staged) {
-            it.staged = false;
-            state.git.sel = orderedGit().indexOf(it);
-          }
-          e.preventDefault(); renderAll(); return;
-        }
-        if (k === 'm') {
-          state.git.mode = state.git.mode === 'unified' ? 'split' : 'unified';
-          e.preventDefault(); renderAll(); return;
-        }
-      }
-    }
-
-    tui.addEventListener('focus', () => {
-      state.focused = true;
-      tuiWrap.classList.add('focused');
-    });
-    tui.addEventListener('blur', () => {
-      state.focused = false;
-      tuiWrap.classList.remove('focused');
-    });
-    tuiWrap.addEventListener('click', () => tui.focus());
-    tui.addEventListener('keydown', onKey);
-
-    new MutationObserver(renderAll).observe(document.documentElement, {
-      attributes: true, attributeFilter: ['data-lang']
-    });
-
-    renderAll();
-  })();
+  document.getElementById('copy')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText('npx @reef-tui/cli').catch(() => {});
+    const el = e.currentTarget.querySelector('.copy');
+    if (el) { const t = el.textContent; el.textContent = 'copied'; setTimeout(() => el.textContent = t, 1200); }
+  });
 </script>
 </body>
 </html>
