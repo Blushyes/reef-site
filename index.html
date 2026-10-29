@@ -199,8 +199,8 @@
   <h1>What's left of an IDE <br>when <span class="accent">AI</span> writes the code.</h1>
   <p class="lead">Browse, review, ship — locally or over SSH. Files, search, git, SQLite.</p>
   <div class="ctas">
-    <a class="cta-install" href="#install" id="copy" data-cmd="npx @reef-tui/cli">
-      <span><span class="dim">$</span> npx @reef-tui/cli</span>
+    <a class="cta-install" href="#install" id="copy" data-cmd="brew install blushyes/tap/reef">
+      <span><span class="dim">$</span> brew install blushyes/tap/reef</span>
       <span class="copy">copy</span>
     </a>
     <a class="cta-gh" href="https://github.com/Blushyes/reef" target="_blank" rel="noopener">
@@ -232,9 +232,9 @@
 <section id="install">
   <div class="label">Install</div>
   <h2>One binary, zero ceremony.</h2>
-<pre><span class="dim">$</span> npx @reef-tui/cli                <span class="dim"># one-off</span>
-<span class="dim">$</span> npm install -g @reef-tui/cli     <span class="dim"># or global</span></pre>
-  <p class="platforms">macOS (arm64, x64) · Linux (arm64, x64) · Windows (x64). Or build from source: <code>cargo build --release</code>.</p>
+<pre><span class="dim">$</span> brew install blushyes/tap/reef
+<span class="dim">$</span> reef update                      <span class="dim"># update to the latest version</span></pre>
+  <p class="platforms">Install with <a href="https://brew.sh/">Homebrew</a> on macOS (arm64, x64) or Linux (arm64, x64). Windows (x64): download from <a href="https://github.com/Blushyes/reef/releases/latest">GitHub Releases</a>.</p>
 <pre><span class="acc">$</span> reef                             <span class="dim"># current directory</span>
 <span class="acc">$</span> reef --ssh user@host             <span class="dim"># remote $HOME (agent auto-installed)</span>
 <span class="acc">$</span> reef --ssh user@host:/path       <span class="dim"># remote /path</span></pre>
@@ -244,15 +244,16 @@
   <span>Reef · alpha · MIT-licensed.</span>
   <span class="links">
     <a href="https://github.com/Blushyes/reef">GitHub</a>
-    <a href="https://www.npmjs.com/package/@reef-tui/cli">npm</a>
+    <a href="https://github.com/Blushyes/homebrew-tap">Homebrew</a>
   </span>
 </footer>
 
 <script>
-  document.getElementById('copy')?.addEventListener('click', (e) => {
+  document.getElementById('copy')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    navigator.clipboard.writeText('npx @reef-tui/cli').catch(() => {});
-    const el = e.currentTarget.querySelector('.copy');
+    const button = e.currentTarget;
+    await navigator.clipboard.writeText(button.dataset.cmd);
+    const el = button.querySelector('.copy');
     if (el) { const t = el.textContent; el.textContent = 'copied'; setTimeout(() => el.textContent = t, 1200); }
   });
 </script>
