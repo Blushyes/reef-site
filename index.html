@@ -235,7 +235,10 @@
 <pre><span class="dim">$</span> brew install blushyes/tap/reef
 <span class="dim">$</span> reef update                      <span class="dim"># update to the latest version</span></pre>
   <p class="platforms">Install with <a href="https://brew.sh/">Homebrew</a> on macOS (arm64, x64) or Linux (arm64, x64). Windows (x64): download from <a href="https://github.com/Blushyes/reef/releases/latest">GitHub Releases</a>.</p>
+  <p class="platforms">Homebrew also installs <code>rf</code>, a shorthand for <code>reef</code>. Both commands accept the same arguments.</p>
 <pre><span class="acc">$</span> reef                             <span class="dim"># current directory</span>
+<span class="acc">$</span> rf                               <span class="dim"># same as reef</span>
+<span class="acc">$</span> rf --ssh user@host               <span class="dim"># shorthand works over SSH too</span>
 <span class="acc">$</span> reef --ssh user@host             <span class="dim"># remote $HOME (agent auto-installed)</span>
 <span class="acc">$</span> reef --ssh user@host:/path       <span class="dim"># remote /path</span></pre>
 </section>
